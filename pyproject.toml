@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sledo"
+version = "0.1.1"
+description = "Sequential learning engineering design optimiser"
+authors = [
+  { name = "Luke Humphrey", email = "luke.humphrey@ukaea.uk" },
+  { name = "Aleks Dubas", email = "aleksander.dubas@ukaea.uk" },
+  { name = "Andy Davis", email = "andrew.davis@ukaea.uk" },
+  { name = "Lloyd Flecther", email = "lloyd.fletcher@ukaea.uk" },
+]
+license = { file = "LICENSE" }
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: GNU LGPL",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.6"
+dependencies = [
+  "ax-platform==0.2.9",
+  "botorch==0.9.2",
+  "matplotlib==3.7.3",
+  "numpy==1.26.0",
+  "torch==2.0.1",
+]
+
+[project.urls]
+"Repository" = "https://github.com/aurora-multiphysics/sledo"
+"Issue Tracker" = "https://github.com/aurora-multiphysics/sledo/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
