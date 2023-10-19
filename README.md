@@ -27,12 +27,20 @@ python -m build
 pip install ./dist/*.whl
 ```
 
+If you intend to use the jupyter notebook tutorials, also run the following line:
+```
+# Enable virtual environment in the tutorial notebooks.
+python -m ipykernel install --user --name=venv
+```
+
 Sledo can now be imported into python as:
 ```
 import sledo
 ```
 
 To test the installation, run `python -c "import sledo"`. If the installation was unsuccessful, an error will be raised.
+
+
 
 ### Editable install (developer mode)
 Developers may wish to create an editable installation. This allows changes to the source code to immediately take effect without the need to re-package and re-install sledo. This can be useful when running tests and other scripts.

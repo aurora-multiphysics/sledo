@@ -13,6 +13,9 @@ source venv/bin/activate
 echo "Installing sledo in developer mode..."
 pip install --editable .
 
+# Allow jupyter notebooks to use the virtual environment.
+python -m ipykernel install --user --name=venv
+
 # Notify user.
 echo "Install complete."
 echo ""

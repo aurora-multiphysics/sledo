@@ -16,6 +16,9 @@ python -m build
 echo "Installing sledo package..."
 pip install ./dist/*.whl
 
+# Allow jupyter notebooks to use the virtual environment.
+python -m ipykernel install --user --name=venv
+
 # Notify user.
 echo "Install complete."
 echo ""
