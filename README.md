@@ -40,7 +40,7 @@ import sledo
 
 To test the installation, run `python3 -c "import sledo"`. If the installation was unsuccessful, an error will be raised.
 
-
+In order to run simulations, make sure to add the path to your MOOSE app of choice to `config.yaml`.
 
 ### Editable install (developer mode)
 Developers may wish to create an editable installation. This allows changes to the source code to immediately take effect without the need to re-package and re-install sledo. This can be useful when running tests and other scripts.
