@@ -6,18 +6,18 @@
 
 # Setup python virtual environment.
 echo "Setting up python venv..."
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 
 # Build and install sledo package.
 echo "Building sledo package..."
-pip install build --upgrade
-python -m build
+pip3 install build --upgrade
+python3 -m build
 echo "Installing sledo package..."
-pip install ./dist/*.whl
+pip3 install ./dist/*.whl
 
 # Allow jupyter notebooks to use the virtual environment.
-python -m ipykernel install --user --name=venv
+python3 -m ipykernel install --user --name=venv
 
 # Notify user.
 echo "Install complete."

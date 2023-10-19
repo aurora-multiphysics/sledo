@@ -23,14 +23,14 @@ jobs:
         run: |
           python3 -m venv venv
           . venv/bin/activate
-          pip install build --upgrade
-          python -m build
-          pip install ./dist/*.whl
+          pip3 install build --upgrade
+          python3 -m build
+          pip3 install ./dist/*.whl
 
       - name: Run linter
         run: |
           . venv/bin/activate
-          pip install flake8
+          pip3 install flake8
           flake8 . --exclude=venv* --count --max-complexity=10 --max-line-length=79 --statistics
 
   build-and-test:
@@ -56,6 +56,6 @@ jobs:
       - name: Run tests
         run: |
           . venv/bin/activate
-          pip install pytest
+          pip3 install pytest
           pytest -v --cov=sledo
   

@@ -6,15 +6,15 @@
 
 # Setup python virtual environment.
 echo "Setting up python venv..."
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 
 # Install sledo as an editable installation.
 echo "Installing sledo in developer mode..."
-pip install --editable .
+pip3 install --editable .
 
 # Allow jupyter notebooks to use the virtual environment.
-python -m ipykernel install --user --name=venv
+python3 -m ipykernel install --user --name=venv
 
 # Notify user.
 echo "Install complete."

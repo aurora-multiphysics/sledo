@@ -10,7 +10,7 @@ Sledo uses Bayesian Optimisation to intelligently select candidate designs from 
 
 Create a virtual environment and activate it. (Skip this step if you intend to install `sledo` into an existing python environment.)
 ```
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 ```
 
@@ -18,19 +18,19 @@ source venv/bin/activate
 To install `sledo`, run the following:
 ```
 # Ensure `build` package is installed.
-pip install build --upgrade
+pip3 install build --upgrade
 
 # Build the distribution package.
-python -m build
+python3 -m build
 
 # Install the built distribution.
-pip install ./dist/*.whl
+pip3 install ./dist/*.whl
 ```
 
 If you intend to use the jupyter notebook tutorials, also run the following line:
 ```
 # Enable virtual environment in the tutorial notebooks.
-python -m ipykernel install --user --name=venv
+python3 -m ipykernel install --user --name=venv
 ```
 
 Sledo can now be imported into python as:
@@ -38,7 +38,7 @@ Sledo can now be imported into python as:
 import sledo
 ```
 
-To test the installation, run `python -c "import sledo"`. If the installation was unsuccessful, an error will be raised.
+To test the installation, run `python3 -c "import sledo"`. If the installation was unsuccessful, an error will be raised.
 
 
 
@@ -48,7 +48,7 @@ Developers may wish to create an editable installation. This allows changes to t
 To install `sledo` this way, run the following:
 ```
 # Install as an editable installation.
-pip install --editable .
+pip3 install --editable .
 ```
 
 # Getting started
