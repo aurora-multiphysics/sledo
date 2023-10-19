@@ -1,2 +1,2 @@
 # Path to default moose app for running simulations.
-MOOSE_PATH: "~/code/proteus/proteus-opt"
+MOOSE_PATH: None
