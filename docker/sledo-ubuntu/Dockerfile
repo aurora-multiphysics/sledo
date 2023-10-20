@@ -13,7 +13,7 @@ RUN cd /$WORKDIR && \
     git checkout "$build_git_sha" && \
     python3 -m pip install --upgrade pip && \
     sudo apt update && \
-    sudo apt install python3.8-venv && \
+    sudo apt install python3.9-venv && \
     chmod +x install.sh && \
     ./install.sh
 
