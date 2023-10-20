@@ -85,12 +85,13 @@ class TestOptimiser:
         self.opt.load_input_file(path_to_file)
 
         # Generate modified input file and test that the new file exists.
-        filename = "input_modified.i"
+        filename = "input_modified"
+        filename_with_ext = filename + ".i"
         new_params = {
             "Length": 4,
             "U": 200,
         }
-        path_to_modified_file = self.opt.data_dir / filename
+        path_to_modified_file = self.opt.data_dir / filename_with_ext
         assert not path_to_modified_file.is_file()
         self.opt.generate_modified_file(filename, new_params=new_params)
         assert path_to_modified_file.is_file()
@@ -125,11 +126,12 @@ class TestOptimiser:
         self.opt.load_input_file(path_to_file)
 
         # Generate modified input file and test that the new file exists.
-        filename = "input_modified.i"
+        filename = "input_modified"
+        filename_with_ext = filename + ".i"
         new_params = {
             "Pi": 6.28,
         }
-        path_to_modified_file = self.opt.data_dir / filename
+        path_to_modified_file = self.opt.data_dir / filename_with_ext
         assert not path_to_modified_file.is_file()
         self.opt.generate_modified_file(filename, new_params=new_params)
         assert path_to_modified_file.is_file()
