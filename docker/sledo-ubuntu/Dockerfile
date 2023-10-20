@@ -11,7 +11,7 @@ RUN cd /$WORKDIR && \
     git clone https://github.com/aurora-multiphysics/sledo.git && \
     cd sledo && \
     git checkout "$build_git_sha" && \
-    pip install --upgrade pip && \
+    python3 -m pip install --upgrade pip && \
     sudo apt update && \
     sudo apt install python3.8-venv && \
     chmod +x install.sh && \
