@@ -4,6 +4,7 @@ from sledo.optimiser import (
 
 import pytest
 import pathlib
+import copy
 
 import pyhit
 import moosetree
@@ -52,7 +53,7 @@ class TestOptimiser:
         self.opt = Optimiser(
             name="simple_monoblock",
             simulation_class=ThermoMechSimulation,
-            search_space=TEST_SEARCH_SPACE,
+            search_space=copy.deepcopy(TEST_SEARCH_SPACE),
             data_dir=tmp_data_dir,
         )
 
@@ -69,8 +70,9 @@ class TestOptimiser:
         path_to_file = TEST_DATA_DIR / "input.i"
         assert path_to_file.is_file()
 
-        # Test a copy does not already exist.
+        # Ensure a copy does not already exist.
         path_to_copy = self.opt.data_dir / "input_unmodified.i"
+        path_to_copy.unlink(missing_ok=True)
         assert not path_to_copy.is_file()
 
         # Load input file and test that both the original and the copy exist.
@@ -92,6 +94,7 @@ class TestOptimiser:
             "U": 200,
         }
         path_to_modified_file = self.opt.data_dir / filename_with_ext
+        path_to_modified_file.unlink(missing_ok=True)
         assert not path_to_modified_file.is_file()
         self.opt.generate_modified_file(filename, new_params=new_params)
         assert path_to_modified_file.is_file()
@@ -128,10 +131,9 @@ class TestOptimiser:
         # Generate modified input file and test that the new file exists.
         filename = "input_modified"
         filename_with_ext = filename + ".i"
-        new_params = {
-            "Pi": 6.28,
-        }
+        new_params = {"Pi": 6.28}
         path_to_modified_file = self.opt.data_dir / filename_with_ext
+        path_to_modified_file.unlink(missing_ok=True)
         assert not path_to_modified_file.is_file()
         self.opt.generate_modified_file(filename, new_params=new_params)
         assert path_to_modified_file.is_file()
