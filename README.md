@@ -8,7 +8,8 @@ Sledo uses Bayesian Optimisation to intelligently select candidate designs from 
 
 ## Linux
 
-Create a virtual environment and activate it. (Skip this step if you intend to install `sledo` into an existing python environment.)
+We recommend creating a virtual environment before running `sledo`.
+Skip this step if you intend to install `sledo` into an existing python environment.
 ```
 python3 -m venv venv
 source venv/bin/activate

@@ -4,11 +4,6 @@
 #
 # (c) Copyright UKAEA 2023.
 
-# Setup python virtual environment.
-echo "Setting up python venv..."
-python3 -m venv venv
-source venv/bin/activate
-
 # Install sledo as an editable installation.
 echo "Installing sledo in developer mode..."
 pip3 install --editable .

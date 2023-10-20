@@ -4,11 +4,6 @@
 #
 # (c) Copyright UKAEA 2023.
 
-# Setup python virtual environment.
-echo "Setting up python venv..."
-python3 -m venv venv
-source venv/bin/activate
-
 # Build and install sledo package.
 echo "Building sledo package..."
 pip3 install build --upgrade
