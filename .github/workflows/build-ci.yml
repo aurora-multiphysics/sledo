@@ -56,5 +56,5 @@ jobs:
       - name: Run tests
         run: |
           pip3 install pytest
-          pytest -v --cov=sledo
+          pytest tests
   
