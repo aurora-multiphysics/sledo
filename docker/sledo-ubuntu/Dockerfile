@@ -12,8 +12,7 @@ RUN cd /$WORKDIR && \
     cd sledo && \
     git checkout "$build_git_sha" && \
     sudo apt update -y && \
-    sudo apt install python3 -y && \
-    sudo apt install python3.9-venv -y && \
+    sudo apt install python3.8-venv -y && \
     python3 -m pip install --upgrade pip && \
     chmod +x install.sh && \
     ./install.sh
