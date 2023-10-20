@@ -55,7 +55,6 @@ jobs:
 
       - name: Run tests
         run: |
-          . venv/bin/activate
           pip3 install pytest
           pytest -v --cov=sledo
   
