@@ -11,9 +11,10 @@ RUN cd /$WORKDIR && \
     git clone https://github.com/aurora-multiphysics/sledo.git && \
     cd sledo && \
     git checkout "$build_git_sha" && \
+    sudo apt update -y && \
+    sudo apt install python3 -y && \
+    sudo apt install python3.9-venv -y && \
     python3 -m pip install --upgrade pip && \
-    sudo apt update && \
-    sudo apt install python3.9-venv && \
     chmod +x install.sh && \
     ./install.sh
 
