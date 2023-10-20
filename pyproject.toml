@@ -26,7 +26,7 @@ dependencies = [
   "dill==0.3.7",
   "ipykernel==6.25.2",
   "matplotlib==3.7.3",
-  "numpy==1.26.0",
+  "numpy==1.24.4",
   "pyyaml==6.0.1",
 ]
 
