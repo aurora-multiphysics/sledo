@@ -5,7 +5,7 @@ ARG WORKDIR="opt"
 
 # Build Sledo
 RUN cd /$WORKDIR && \
-    git clone https://github.com/lukethehuman/sledo.git && \
+    git clone https://github.com/aurora-multiphysics/sledo.git && \
     cd sledo && \
     chmod +x install.sh && \
     ./install.sh
