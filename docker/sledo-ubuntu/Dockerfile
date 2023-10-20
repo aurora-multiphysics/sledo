@@ -3,10 +3,14 @@ FROM idaholab/moose:latest
 
 ARG WORKDIR="opt"
 
+# By default, checkout the main branch
+ARG build_git_sha="main"
+
 # Build Sledo
 RUN cd /$WORKDIR && \
     git clone https://github.com/aurora-multiphysics/sledo.git && \
     cd sledo && \
+    git checkout "$build_git_sha" && \
     chmod +x install.sh && \
     ./install.sh
 
