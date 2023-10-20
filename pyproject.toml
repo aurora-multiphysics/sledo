@@ -21,7 +21,7 @@ classifiers = [
 ]
 requires-python = ">=3.6"
 dependencies = [
-  "ax-platform==0.3.4",
+  "ax-platform==0.3.3",
   "botorch==0.9.2",
   "dill==0.3.7",
   "ipykernel==6.25.2",
