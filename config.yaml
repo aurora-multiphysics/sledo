@@ -1,0 +1,2 @@
+# Path to default moose app for running simulations.
+MOOSE_PATH: None
