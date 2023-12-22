@@ -16,9 +16,9 @@
 # The solve is steady state and outputs temperature, displacement (magnitude
 # as well as the x, y, z components), and von mises stress.
 
+#_*
 #-------------------------------------------------------------------------
 # PARAMETER DEFINITIONS 
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # File handling
 name=monoblock
@@ -93,6 +93,7 @@ coolantTemp=150     # degC
 surfHeatFlux=10e6   # W/m^2
 
 #-------------------------------------------------------------------------
+#**
 
 [GlobalParams]
   displacements = 'disp_x disp_y disp_z'
