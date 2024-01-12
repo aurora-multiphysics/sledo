@@ -20,11 +20,6 @@
 # PARAMETER DEFINITIONS
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# File handling
-name=simple_monoblock
-outputDir=outputs
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Geometry
 PI=3.141592653589793
 
@@ -601,9 +596,5 @@ blockTemp=100       # degC
 
 [Outputs]
   exodus = true
-  [write_to_file]
-    type = CSV
-    show = 'max_stress'
-    file_base = '${outputDir}/${name}_out'
-  []
+  csv = true
 []

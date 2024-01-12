@@ -19,10 +19,6 @@
 #_*
 #-------------------------------------------------------------------------
 # PARAMETER DEFINITIONS 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# File handling
-name=monoblock
-outputDir=outputs
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Geometry
@@ -768,9 +764,5 @@ surfHeatFlux=10e6   # W/m^2
 
 [Outputs]
   exodus = true
-  [write_to_file]
-    type = CSV
-    show = 'max_stress'
-    file_base = '${outputDir}/${name}_out'
-  []
+  csv = true
 []
