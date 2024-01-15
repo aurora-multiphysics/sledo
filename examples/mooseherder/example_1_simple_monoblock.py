@@ -5,14 +5,14 @@ Example input file for running Bayesian optimisation of a simplified divertor
 monoblock using MooseHerder as the model instantiation tool and Proteus as the
 simulation tool.
 
-(c) Copyright UKAEA 2023.
+(c) Copyright UKAEA 2023-2024.
 """
 
 from pathlib import Path
 from ray import train, tune
 from ray.tune.search.ax import AxSearch
 
-from proteusherder import ProteusHerder
+from examples.mooseherder.mooseherder import MooseHerder
 
 MOOSE_OPT = "proteus-opt"
 EXAMPLES_DIR = Path(__file__).parent.absolute()
@@ -22,7 +22,7 @@ WORKING_DIR = EXAMPLES_DIR / "results" / "simple_monoblock"
 if __name__ == '__main__':
 
     # Instantiate moose herder class.
-    proteus_herder = ProteusHerder(
+    proteus_herder = MooseHerder(
         MOOSE_OPT,
         BASE_INPUT_FILE,
         WORKING_DIR,
