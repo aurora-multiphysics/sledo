@@ -14,7 +14,7 @@ import subprocess
 from mooseherder import InputModifier
 
 
-class MooseHerder():
+class DesignEvaluator():
     """Class for handling parametric design evaluation.
 
     MOOSEHerder is used for model instantiation and a chosen MOOSE app is used

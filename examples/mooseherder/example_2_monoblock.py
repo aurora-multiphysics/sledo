@@ -12,7 +12,7 @@ from pathlib import Path
 from ray import train, tune
 from ray.tune.search.ax import AxSearch
 
-from examples.mooseherder.mooseherder import MooseHerder
+from examples.mooseherder.design_evaluator import DesignEvaluator
 
 MOOSE_OPT = "proteus-opt"
 EXAMPLES_DIR = Path(__file__).parent.absolute()
@@ -22,7 +22,7 @@ WORKING_DIR = EXAMPLES_DIR / "results" / "monoblock"
 if __name__ == '__main__':
 
     # Instantiate moose herder class.
-    proteus_herder = MooseHerder(
+    design_evaluator = DesignEvaluator(
         MOOSE_OPT,
         BASE_INPUT_FILE,
         WORKING_DIR,
@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     # Define design evaluation function.
     def evaluate(parameters):
-        data = proteus_herder.evaluate_design(parameters)
+        data = design_evaluator.evaluate_design(parameters)
         stress = float(data[-1][-1])
         train.report({"stress": stress})
 
