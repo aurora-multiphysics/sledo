@@ -164,6 +164,3 @@ cython_debug/
 
 # Ignore any results folders
 results
-
-# Ignore config file
-config.yaml
