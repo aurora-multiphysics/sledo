@@ -1,42 +1,71 @@
 """
-Optimiser classes for SLEDO.
+Optimiser base class for SLEDO.
 
-Handles Bayesian Optimisation.
-
-(c) Copyright UKAEA 2023.
+(c) Copyright UKAEA 2023-2024.
 """
-import ax.service.ax_client
-import pathlib
+
 import dill
+import pathlib
+from ray import train, tune
+from ray.tune.result_grid import ResultGrid
 
 
 class Optimiser:
-    """The SLEDO optimiser base class."""
+    """The SLEDO optimiser class."""
 
     def __init__(
         self,
         name: str,
+        evaluation_function: callable,
         search_space: dict,
-        trainable,
-        search_algorithm,
-        scheduler,
-        evaluation_function,
+        metric: str,
+        search_alg: type(tune.search.Searcher),
+        max_total_trials: int,
+        max_concurrent_trials: int = 1,
         data_dir: str | pathlib.Path = None,
     ) -> None:
         """Initialise class instance.
 
         Parameters
         ----------
-        name : str
+        name (str):
             The name of the instance.
-        search_space : dict
+        evaluation_function (callable):
+            The function used to evaluate each design iteration. Must accept a
+            dict of parameters and their values for a given design and return
+            a dict of metrics for that design.
+        search_space (dict):
             The search space for the optimisation, values must be set according
             to the Ray Tune Search Space API.
-        data_dir : str | pathlib.Path
-            Path to the data directory to store outputs.
+        metric (str):
+            The metric of interest, must match one of the keys used in the
+            output of the evaluation function.
+        search_alg (tune.search.Searcher):
+            The search algorithm to use, must be an instance of a subclass of
+            the Ray Tune Searcher base class.
+        max_total_trials(int):
+            The maximum number of total trials to run.
+        max_concurrent_trials (int, optional):
+            The maximum number of concurrent trials. Defaults to 1, in which
+            case the optimisation is entirely sequential.
+        data_dir (str | pathlib.Path):
+            Path to the data directory to store outputs. Defaults to None, in
+            which case a subdirectory is made in the current working directory
+            with a name set by the name arg of this class.
         """
         self.name = name
+
+        # Add tune report step to output of design evaluation function.
+        self.evaluation_function = lambda x: train.report(
+            evaluation_function(x)
+        )
+
         self.search_space = search_space
+
+        # Set search algorithm and limit maximum number of concurrent trials.
+        self.search_alg = tune.search.ConcurrencyLimiter(
+            search_alg, max_concurrent=max_concurrent_trials
+        )
 
         # Set data directory and create the directory if it doesn't exist yet.
         if data_dir:
@@ -46,56 +75,45 @@ class Optimiser:
         if not self.data_dir.exists():
             self.data_dir.mkdir()
 
-    def run_optimisation_loop(
-        self,
-        objective_name="",
-        force=False,
-        minimise=False,
-        parameter_constraints=None,
-        outcome_constraints=None,
-        max_iter=25,
-        min_acqf=None,
-    ):
-        """Run the optimisation loop.
-
-        Parameters
-        ----------
-        max_iter : int
-            The maximum number of optimisation iterations. The optimisation
-            will complete when this number of iterations is reached.
-        min_acqf : float (optional, default = None)
-            The minimum value of the acquisition function required to proceed
-            with the optimisation loop. The optimisation will complete when
-            the max of the acquisition function is below this value. If None,
-            the optimisation loop will continue to max_iter regardless of the
-            acquisition function values.
-        """
-
-        self.ax_client = ax.service.ax_client.AxClient()
-        self.ax_client.create_experiment(
-            overwrite_existing_experiment=force,
-            name=self.name,
-            parameters=self.search_space,
-            objective_name=objective_name,
-            minimize=minimise,
-            parameter_constraints=parameter_constraints,
-            outcome_constraints=outcome_constraints,
+        # Instantiate Tuner object.
+        self.tuner = tune.Tuner(
+            self.evaluation_function,
+            tune_config=tune.TuneConfig(
+                mode="min",
+                metric=metric,
+                search_alg=self.search_alg,
+                num_samples=max_total_trials,
+            ),
+            run_config=train.RunConfig(
+                name=self.name,
+            ),
+            param_space=search_space,
         )
 
-        def evaluate(filename, parameters):
-            self.generate_modified_file(filename, parameters)
-            sim = self.simulation_class(filename, self.data_dir)
-            sim.run_sim()
-            result_dict = sim.get_results()
-            return result_dict
+    def run_optimisation(self) -> ResultGrid:
+        """Run the optimisation loop.
 
-        for i in range(max_iter):
-            filename = f"trial_{i}"
-            parameters, trial_index = self.ax_client.get_next_trial()
-            self.ax_client.complete_trial(
-                trial_index=trial_index,
-                raw_data=evaluate(filename, parameters),
-            )
+        Returns
+        -------
+        results (ResultGrid):
+            Ray tune ResultGrid instance containing the results of the
+            optimisation.
+        """
+        self.results = self.tuner.fit()
+        return self.results
+
+    def get_results(self) -> ResultGrid:
+        """Get results of a previous optimisation.
+
+        Returns
+        -------
+        results (ResultGrid):
+            Ray tune ResultGrid instance containing the results of the
+            optimisation.
+        """
+        self.results = self.tuner.get_results()
+        return self.results
+
 
     def pickle(self, filepath=None):
         """Save instance to file."""
