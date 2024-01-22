@@ -114,7 +114,6 @@ class Optimiser:
         self.results = self.tuner.get_results()
         return self.results
 
-
     def pickle(self, filepath=None):
         """Save instance to file."""
         if not filepath:
