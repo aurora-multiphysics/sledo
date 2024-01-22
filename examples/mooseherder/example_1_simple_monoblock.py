@@ -9,9 +9,10 @@ simulation tool.
 """
 
 from pathlib import Path
-from ray import train, tune
+from ray import tune
 from ray.tune.search.ax import AxSearch
 
+from sledo.optimiser import Optimiser
 from examples.mooseherder.design_evaluator import DesignEvaluator
 
 MOOSE_OPT = "proteus-opt"
@@ -32,7 +33,7 @@ if __name__ == '__main__':
     def evaluate(parameters):
         data = design_evaluator.evaluate_design(parameters)
         stress = float(data[-1][-1])
-        train.report({"stress": stress})
+        return {"stress": stress}
 
     # Define a search space according to the Ray Tune API.
     # Documentation here:
@@ -42,26 +43,18 @@ if __name__ == '__main__':
         "monoBThick": tune.uniform(0.5e-3, 9e-3),
     }
 
-    # Define the search algorithm.
-    search_alg = AxSearch()
-
-    # Set the maximum number of concurrent trials.
-    search_alg = tune.search.ConcurrencyLimiter(search_alg, max_concurrent=1)
-
-    # Set the number of component designs to trial.
-    num_samples = 20
-
-    tuner = tune.Tuner(
+    # Instantiate SLEDO optimiser.
+    opt = Optimiser(
+        "simple-monoblock-optimiser",
         evaluate,
-        tune_config=tune.TuneConfig(
-            metric="stress",
-            mode="min",
-            search_alg=search_alg,
-            num_samples=num_samples,
-        ),
-        run_config=train.RunConfig(
-            name="ax",
-        ),
-        param_space=search_space,
+        search_space,
+        "stress",
+        AxSearch(),
+        20,
+        data_dir=WORKING_DIR,
     )
-    results = tuner.fit()
+
+    results = opt.run_optimisation()
+
+    # Save the optimiser class instance to file.
+    opt.pickle()
