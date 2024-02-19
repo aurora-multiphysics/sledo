@@ -41,19 +41,18 @@ class DesignEvaluator(ABC):
 
 
 class TestFunctionDesignEvaluator(DesignEvaluator):
-    """DesignEvaluator subclass which evaluates a test function.
-    """
+    """DesignEvaluator subclass which evaluates a test function."""
 
     def __init__(self, test_function: str = "three_hump_camel") -> None:
         self.test_function = getattr(self, test_function)
 
     def three_hump_camel(x1, x2):
         result = (
-            (2 * x1 ** 2)
-            - (1.05 * x1 ** 4)
-            + (x1 ** 6 / 6)
+            (2 * x1**2)
+            - (1.05 * x1**4)
+            + (x1**6 / 6)
             + (x1 * x2)
-            + (x2 ** 2)
+            + (x2**2)
         )
         return {"y1": result}
 
@@ -62,19 +61,19 @@ class TestFunctionDesignEvaluator(DesignEvaluator):
 
 
 class MooseHerderDesignEvaluator(DesignEvaluator):
-    """DesignEvaluator subclass implemented using MooseHerder.
-    """
+    """DesignEvaluator subclass implemented using MooseHerder."""
+
     def __init__(
         self,
         metrics: list[str],
         base_input_file: Path | str,
         working_dir: Path | str = Path.cwd(),
-        config_path: Path | str = Path.cwd() / 'moose_config.json',
+        config_path: Path | str = Path.cwd() / "moose_config.json",
         run_options: dict = {
             "n_tasks": 1,
             "n_threads": 4,
-            "redirect_out": False
-        }
+            "redirect_out": False,
+        },
     ) -> None:
         """_summary_
 
@@ -98,7 +97,8 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         self.run_options - run_options
 
     def generate_modified_input_file(
-        self, parameters: dict,
+        self,
+        parameters: dict,
     ) -> Path:
         """_summary_
 
@@ -122,7 +122,9 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         return new_input_file
 
     def run_simulation(
-        self, input_filepath: Path | str, run_options: dict = None,
+        self,
+        input_filepath: Path | str,
+        run_options: dict = None,
     ) -> None:
         """_summary_
 
