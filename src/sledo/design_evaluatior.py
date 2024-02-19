@@ -25,7 +25,7 @@ class DesignEvaluator(ABC):
 
         Returns
         -------
-        metrics: dict
+        dict
             Dictionary of metrics describing the design's performance as
             evaluated.
         """
