@@ -40,6 +40,27 @@ class DesignEvaluator(ABC):
         """
 
 
+class TestFunctionDesignEvaluator(DesignEvaluator):
+    """DesignEvaluator subclass which evaluates a test function.
+    """
+
+    def __init__(self, test_function: str = "three_hump_camel") -> None:
+        self.test_function = getattr(self, test_function)
+
+    def three_hump_camel(x1, x2):
+        result = (
+            (2 * x1 ** 2)
+            - (1.05 * x1 ** 4)
+            + (x1 ** 6 / 6)
+            + (x1 * x2)
+            + (x2 ** 2)
+        )
+        return {"y1": result}
+
+    def evaluate_design(self, parameters: dict) -> dict:
+        return self.test_function(parameters)
+
+
 class MooseHerderDesignEvaluator(DesignEvaluator):
     """DesignEvaluator subclass implemented using MooseHerder.
     """
