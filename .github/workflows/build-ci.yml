@@ -5,9 +5,10 @@ on:
   # Run the workflow on push to "main" branch
   push:
     branches: [ "main" ]
-  # Run the workflow on pull request to "main" branch
+  # Run the workflow on pull request to "main" branch and ready for review
   pull_request:
     branches: [ "main"]
+    types: [ready_for_review]
   # Run the workflow manually
   workflow_dispatch:
 
