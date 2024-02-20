@@ -61,7 +61,7 @@ class TestFunctionDesignEvaluator(DesignEvaluator):
 
 
 class MooseHerderDesignEvaluator(DesignEvaluator):
-    """DesignEvaluator subclass implemented using MooseHerder."""
+    """DesignEvaluator subclass which evaluates a design via MooseHerder."""
 
     def __init__(
         self,
@@ -75,20 +75,27 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
             "redirect_out": False,
         },
     ) -> None:
-        """_summary_
+        """Initialise class instance with the metrics to output, the required
+        paths, and the simulation run options.
 
         Parameters
         ----------
         metrics : list[str]
-            _description_
+            List of metric names by which a given design's performance is
+            evaluated. These names must exactly match how they appear in the
+            MOOSE simulation global variables so they can be read successfully.
         base_input_file : Path | str
-            _description_
+            Path to the base MOOSE input file (.i) to use as the basis for
+            generating modified files. This file will not be modified.
         working_dir : Path | str, optional
-            _description_, by default Path.cwd()
+            Path to the working directory to use for storing modified MOOSE
+            input files (.i) and running MOOSE, by default Path.cwd().
         config_path : Path | str, optional
-            _description_, by default Path.cwd()/'moose_config.json'
-        run_options : _type_, optional
-            _description_, by default { "n_tasks": 1, "n_threads": 4, "redirect_out": False }
+            Path to the config file containing the required path to run MOOSE,
+            by default Path.cwd()/'moose_config.json'
+        run_options : dict, optional
+            Dict of options for running the simulation, by default
+            { "n_tasks": 1, "n_threads": 4, "redirect_out": False }
         """
         self.metrics = metrics
         self.base_input_file = Path(base_input_file)
@@ -100,17 +107,19 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         self,
         parameters: dict,
     ) -> Path:
-        """_summary_
+        """Generate a modified MOOSE input file (.i) with specified parameters.
+        Generated file will use the filename "trial.i".
 
         Parameters
         ----------
         parameters : dict
-            _description_
+            Dictionary of parameters to use in the modified file. Keys must
+            match top-level parameters in the input file.
 
         Returns
         -------
         Path
-            _description_
+            Path to the generated input file for the given trial.
         """
         moose_mod = InputModifier(
             str(self.base_input_file), comment_char="#", end_char=""
@@ -126,14 +135,15 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         input_filepath: Path | str,
         run_options: dict = None,
     ) -> None:
-        """_summary_
+        """Run a MOOSE simulation.
 
         Parameters
         ----------
         input_filepath : Path | str
-            _description_
+            Path to the moose input file (.i) to run.
         run_options : dict, optional
-            _description_, by default None
+            Dictionary of options for running the simulation, overrides those
+            set during __init__, by default None.
         """
         moose_runner = MooseRunner(self.moose_config)
         moose_runner.set_input_file(Path(input_filepath))
@@ -143,17 +153,18 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         moose_runner.run()
 
     def read_exodus(self, filepath: Path | str = None) -> SimData:
-        """_summary_
+        """Read the simulation results from exodus file.
 
         Parameters
         ----------
         filepath : Path | str, optional
-            _description_, by default None
+            Path to the exodus file to read, by default "trial_out.e" in the
+            set working directory (self.working_dir) is used.
 
         Returns
         -------
         SimData
-            _description_
+            SimData object containing the simulation results read from file.
         """
         if not filepath:
             filepath = self.working_dir / "trial_out.e"
@@ -163,17 +174,20 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         return simdata
 
     def evaluate_design(self, parameters: dict) -> dict:
-        """_summary_
+        """Evaluate a design and return performance metrics.
 
         Parameters
         ----------
         parameters : dict
-            _description_
+            Dictionary of parameters describing the design to be evaluated.
+            Keys must match top-level parameters in the MOOSE input file.
 
         Returns
         -------
-        dict
-            _description_
+        metrics_dict : dict
+            Dictionary of metrics describing the design's performance as
+            evaluated. Key names will exactly match how they appear in the
+            MOOSE simulation global variables.
         """
         trial_filepath = self.generate_modified_input_file(parameters)
         self.run_simulation(trial_filepath)
