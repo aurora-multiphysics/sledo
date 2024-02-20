@@ -11,6 +11,8 @@ from ray import train, tune
 from ray.tune.search import Searcher
 from ray.tune.result_grid import ResultGrid
 
+from sledo.design_evaluator import DesignEvaluator
+
 
 class Optimiser:
     """The SLEDO optimiser class."""
@@ -18,7 +20,7 @@ class Optimiser:
     def __init__(
         self,
         name: str,
-        evaluation_function: callable,
+        design_evaluator: DesignEvaluator,
         search_space: dict,
         metric: str,
         search_alg: Searcher,
@@ -32,16 +34,11 @@ class Optimiser:
         ----------
         name : str
             The name of the instance.
-        evaluation_function : callable
-            The function used to evaluate each design iteration. Must accept a
-            dict of parameters and their values for a given design and return
-            a dict of metrics for that design.
+        design_evaluator : DesignEvaluator
+            The DesignEvaluator subclass used to evaluate each design.
         search_space : dict
             The search space for the optimisation, values must be set according
             to the Ray Tune Search Space API.
-        metric : str
-            The metric of interest, must match one of the keys used in the
-            output of the evaluation function.
         search_alg : Searcher
             The search algorithm to use, must be an instance of a subclass of
             the Ray Tune Searcher base class.
@@ -56,13 +53,11 @@ class Optimiser:
             with a name set by the name arg of this class).
         """
         self.name = name
-
-        # Add tune report step to output of design evaluation function.
-        self.evaluation_function = lambda x: train.report(
-            evaluation_function(x)
-        )
-
+        self.design_evaluator = design_evaluator
         self.search_space = search_space
+
+        # Get metrics from design evaluator.
+        self.metrics = design_evaluator.metrics
 
         # Set search algorithm and limit maximum number of concurrent trials.
         self.search_alg = tune.search.ConcurrencyLimiter(
@@ -77,7 +72,13 @@ class Optimiser:
         if not self.data_dir.exists():
             self.data_dir.mkdir()
 
-        # Instantiate Tuner object.
+        # Add a step to the evaluation function reporting the results of each
+        # design evaluation to the ray tune optimiser.
+        self.evaluation_function = lambda results_dict: train.report(
+            self.design_evaluator.evaluate_design(results_dict)
+        )
+
+        # Instantiate ray tune Tuner object.
         self.tuner = tune.Tuner(
             self.evaluation_function,
             tune_config=tune.TuneConfig(
