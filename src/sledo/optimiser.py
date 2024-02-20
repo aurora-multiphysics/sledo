@@ -4,9 +4,11 @@ Optimiser base class for SLEDO.
 (c) Copyright UKAEA 2023-2024.
 """
 
+from pathlib import Path
 import dill
-import pathlib
+
 from ray import train, tune
+from ray.tune.search import Searcher
 from ray.tune.result_grid import ResultGrid
 
 
@@ -19,39 +21,39 @@ class Optimiser:
         evaluation_function: callable,
         search_space: dict,
         metric: str,
-        search_alg: type(tune.search.Searcher),
+        search_alg: Searcher,
         max_total_trials: int,
         max_concurrent_trials: int = 1,
-        data_dir: str | pathlib.Path = None,
+        data_dir: str | Path = None,
     ) -> None:
         """Initialise class instance.
 
         Parameters
         ----------
-        name (str):
+        name : str
             The name of the instance.
-        evaluation_function (callable):
+        evaluation_function : callable
             The function used to evaluate each design iteration. Must accept a
             dict of parameters and their values for a given design and return
             a dict of metrics for that design.
-        search_space (dict):
+        search_space : dict
             The search space for the optimisation, values must be set according
             to the Ray Tune Search Space API.
-        metric (str):
+        metric : str
             The metric of interest, must match one of the keys used in the
             output of the evaluation function.
-        search_alg (tune.search.Searcher):
+        search_alg : Searcher
             The search algorithm to use, must be an instance of a subclass of
             the Ray Tune Searcher base class.
-        max_total_trials(int):
+        max_total_trials : int
             The maximum number of total trials to run.
-        max_concurrent_trials (int, optional):
-            The maximum number of concurrent trials. Defaults to 1, in which
-            case the optimisation is entirely sequential.
-        data_dir (str | pathlib.Path):
-            Path to the data directory to store outputs. Defaults to None, in
+        max_concurrent_trials : int, optional
+            The maximum number of concurrent trials, by default 1 (i.e.
+            trials are sequential).
+        data_dir : str | Path, optional
+            Path to the data directory to store outputs, by default None (in
             which case a subdirectory is made in the current working directory
-            with a name set by the name arg of this class.
+            with a name set by the name arg of this class).
         """
         self.name = name
 
@@ -69,9 +71,9 @@ class Optimiser:
 
         # Set data directory and create the directory if it doesn't exist yet.
         if data_dir:
-            self.data_dir = pathlib.Path(data_dir)
+            self.data_dir = Path(data_dir)
         else:
-            self.data_dir = pathlib.Path(f"./{self.name}")
+            self.data_dir = Path(f"./{self.name}")
         if not self.data_dir.exists():
             self.data_dir.mkdir()
 
@@ -91,11 +93,11 @@ class Optimiser:
         )
 
     def run_optimisation(self) -> ResultGrid:
-        """Run the optimisation loop.
+        """Run the optimisation loop and return the results.
 
         Returns
         -------
-        results (ResultGrid):
+        results : ResultGrid
             Ray tune ResultGrid instance containing the results of the
             optimisation.
         """
@@ -103,11 +105,11 @@ class Optimiser:
         return self.results
 
     def get_results(self) -> ResultGrid:
-        """Get results of a previous optimisation.
+        """Get results of the optimisation.
 
         Returns
         -------
-        results (ResultGrid):
+        results : ResultGrid
             Ray tune ResultGrid instance containing the results of the
             optimisation.
         """
@@ -115,7 +117,7 @@ class Optimiser:
         return self.results
 
     def pickle(self, filepath=None):
-        """Save instance to file."""
+        """Save class instance to file."""
         if not filepath:
             filepath = self.data_dir / f"{self.name}.pickle"
         with open(filepath, "wb") as file:
@@ -123,7 +125,7 @@ class Optimiser:
 
     @classmethod
     def unpickle(cls, filepath):
-        """Load instance from file."""
+        """Load class instance from file."""
         with open(filepath, "rb") as f:
             obj = dill.load(f)
         if isinstance(obj, cls):
