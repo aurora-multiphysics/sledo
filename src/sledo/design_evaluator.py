@@ -18,9 +18,9 @@ from mooseherder import (
 
 class DesignEvaluator(ABC):
     """Abstract base class for evaluating a design. Must contain a method which
-    takes in the parameters describing a design and returns the
-    performance metrics for that design. Additional methods may be implemented
-    by a given subclass to perform the design evaluation procedure as required.
+    takes in the parameters describing a design and returns the performance
+    metrics for that design. Additional methods may be implemented by a given
+    subclass to perform the design evaluation procedure as required.
     """
 
     @abstractmethod
@@ -92,10 +92,10 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
             input files (.i) and running MOOSE, by default Path.cwd().
         config_path : Path | str, optional
             Path to the config file containing the required path to run MOOSE,
-            by default Path.cwd()/'moose_config.json'
+            by default Path.cwd()/'moose_config.json'.
         run_options : dict, optional
             Dict of options for running the simulation, by default
-            { "n_tasks": 1, "n_threads": 4, "redirect_out": False }
+            { "n_tasks": 1, "n_threads": 4, "redirect_out": False }.
         """
         self.metrics = metrics
         self.base_input_file = Path(base_input_file)
