@@ -45,7 +45,7 @@ class DesignEvaluator(ABC):
         """List of metric names.
 
         List of metrics by which a given design's performance is evaluated.
-        These names must match the keys of the dictionary returned by the 
+        These names must match the keys of the dictionary returned by the
         evaluate_design method.
         """
 
