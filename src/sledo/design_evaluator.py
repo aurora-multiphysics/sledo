@@ -39,12 +39,26 @@ class DesignEvaluator(ABC):
             evaluated.
         """
 
+    @property
+    @abstractmethod
+    def metrics(self):
+        """List of metric names.
+
+        List of metrics by which a given design's performance is evaluated.
+        These names must match the keys of the dictionary returned by the 
+        evaluate_design method.
+        """
+
 
 class TestFunctionDesignEvaluator(DesignEvaluator):
     """DesignEvaluator subclass which evaluates a test function."""
 
     def __init__(self, test_function: str = "three_hump_camel") -> None:
         self.test_function = getattr(self, test_function)
+        metrics_dict = {
+            "three_hump_camel": "y1"
+        }
+        self.metrics = metrics_dict[test_function]
 
     def three_hump_camel(x1, x2):
         result = (
