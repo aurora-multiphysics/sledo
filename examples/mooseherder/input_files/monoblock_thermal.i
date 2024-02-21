@@ -31,9 +31,9 @@
 # The boundary conditions are the incoming heat flux on the top surface, and
 # the coolant temperature. The solve is steady state and outputs temperature.
 
-#_*
 #-------------------------------------------------------------------------
 # PARAMETER DEFINITIONS 
+#_*
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Geometry
@@ -103,8 +103,8 @@ stressFreeTemp=20   # degC
 coolantTemp=150     # degC
 surfHeatFlux=10e6   # W/m^2
 
-#-------------------------------------------------------------------------
 #**
+#-------------------------------------------------------------------------
 
 [Mesh]
   second_order = ${secondOrder}

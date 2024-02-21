@@ -1,24 +1,43 @@
 #-------------------------------------------------------------------------
+# monoblock_thermomech.i
+# Author: Luke Humphrey
+# (c) Copyright UKAEA 2023-2024.
+# 
+#-------------------------------------------------------------------------
 # DESCRIPTION
-
-# Input file for computing the von-mises stress between the coolant pipe of a
-# tokamak divertor monoblock and its armour due to thermal expansion.
+# 
+# Input file for a thermomechanical simulation of a divertor monoblock.
+#
+# Computes the von-mises stress between the coolant pipe of a tokamak divertor
+# monoblock and its armour due to thermal expansion.
+#
 # The monoblock is comprised of a copper-chromium-zirconium (CuCrZr) pipe
 # surrounded by tungsten armour with an OFHC copper pipe interlayer in between.
+#
+# Temperature-variant material properties are implemented via linear
+# interpolation from available data.
+#
+# Parameters describing the geometry are present at the top of the file above
+# the MOOSE tree structure. These parameters can be modified to produce a
+# monoblock design with the specified geometry.
+#
 # The mesh uses second order elements with a nominal mesh refinement of one 
 # division per millimetre.
+#
 # The incoming heat is modelled as a constant heat flux on the top surface of
 # the block (i.e. the plasma-facing side). The outgoing heat is modelled as a
 # convective heat flux on the internal surface of the copper pipe. Besides this
 # heat flux, coolant flow is not modelled; the fluid region is treated as void.
+#
 # The boundary conditions are the stress-free temperature for the block, the
 # incoming heat flux on the top surface, and the coolant temperature.
+#
 # The solve is steady state and outputs temperature, displacement (magnitude
 # as well as the x, y, z components), and von mises stress.
 
-#_*
 #-------------------------------------------------------------------------
 # PARAMETER DEFINITIONS 
+#_*
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Geometry
@@ -88,8 +107,8 @@ stressFreeTemp=20   # degC
 coolantTemp=150     # degC
 surfHeatFlux=10e6   # W/m^2
 
-#-------------------------------------------------------------------------
 #**
+#-------------------------------------------------------------------------
 
 [GlobalParams]
   displacements = 'disp_x disp_y disp_z'
