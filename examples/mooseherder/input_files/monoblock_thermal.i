@@ -1,20 +1,35 @@
 #-------------------------------------------------------------------------
+# monoblock_thermal.i
+# Author: Luke Humphrey
+# (c) Copyright UKAEA 2024.
+# 
+#-------------------------------------------------------------------------
 # DESCRIPTION
-
-# Input file for computing the von-mises stress between the coolant pipe of a
-# tokamak divertor monoblock and its armour due to thermal expansion.
+# 
+# Input file for a thermal simulation of a divertor monoblock.
+#
 # The monoblock is comprised of a copper-chromium-zirconium (CuCrZr) pipe
 # surrounded by tungsten armour with an OFHC copper pipe interlayer in between.
-# The mesh uses second order elements with a nominal mesh refinement of one 
-# division per millimetre.
+#
+# Temperature-variant material properties are implemented via linear
+# interpolation from available data. Some of these material properties are not
+# used for this thermal simulation, but are in place for a thermomechanical
+# model including thermal expansion.
+#
+# Parameters describing the geometry are present at the top of the file above
+# the MOOSE tree structure. These parameters can be modified to produce a
+# monoblock design with the specified geometry.
+# 
+# The mesh uses first order elements with a nominal mesh refinement of one 
+# division per millimetre. 
+#
 # The incoming heat is modelled as a constant heat flux on the top surface of
 # the block (i.e. the plasma-facing side). The outgoing heat is modelled as a
 # convective heat flux on the internal surface of the copper pipe. Besides this
 # heat flux, coolant flow is not modelled; the fluid region is treated as void.
-# The boundary conditions are the stress-free temperature for the block, the
-# incoming heat flux on the top surface, and the coolant temperature.
-# The solve is steady state and outputs temperature, displacement (magnitude
-# as well as the x, y, z components), and von mises stress.
+# 
+# The boundary conditions are the incoming heat flux on the top surface, and
+# the coolant temperature. The solve is steady state and outputs temperature.
 
 #_*
 #-------------------------------------------------------------------------
@@ -90,10 +105,6 @@ surfHeatFlux=10e6   # W/m^2
 
 #-------------------------------------------------------------------------
 #**
-
-[GlobalParams]
-  displacements = 'disp_x disp_y disp_z'
-[]
 
 [Mesh]
   second_order = ${secondOrder}
@@ -237,19 +248,6 @@ surfHeatFlux=10e6   # W/m^2
   [heat_conduction]
     type = HeatConduction
     variable = temperature
-  []
-[]
-
-[Modules]
-  [TensorMechanics]
-    [Master]
-      [all]
-        add_variables = true
-        strain = FINITE
-        automatic_eigenstrain_names = true
-        generate_output = 'vonmises_stress'
-      []
-    []
   []
 []
 
@@ -687,10 +685,6 @@ surfHeatFlux=10e6   # W/m^2
     block = 'armour'
   []
 
-  [stress]
-    type = ComputeFiniteStrainElasticStress
-  []
-
   [coolant_heat_transfer_coefficient]
     type = PiecewiseLinearInterpolationMaterial
     xy_data = '
@@ -721,24 +715,6 @@ surfHeatFlux=10e6   # W/m^2
     T_infinity = ${coolantTemp}
     heat_transfer_coefficient = heat_transfer_coefficient
   []
-  [fixed_x]
-    type = DirichletBC
-    variable = disp_x
-    boundary = 'centre_x_bottom_y_back_z centre_x_bottom_y_front_z'
-    value = 0
-  []
-  [fixed_y]
-    type = DirichletBC
-    variable = disp_y
-    boundary = 'bottom'
-    value = 0
-  []
-  [fixed_z]
-    type = DirichletBC
-    variable = disp_z
-    boundary = 'left_x_bottom_y_centre_z right_x_bottom_y_centre_z'
-    value = 0
-  []
 []
 
 [Preconditioning]
@@ -756,13 +732,12 @@ surfHeatFlux=10e6   # W/m^2
 []
 
 [Postprocessors]
-  [max_stress]
+  [max_temp]
     type = ElementExtremeValue
-    variable = vonmises_stress
+    variable = temperature
   []
 []
 
 [Outputs]
   exodus = true
-  csv = true
 []
