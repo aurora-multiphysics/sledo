@@ -9,6 +9,7 @@ import dill
 
 from ray import train, tune
 from ray.tune.search import Searcher
+from ray.tune.search.ax import AxSearch
 from ray.tune.result_grid import ResultGrid
 
 from sledo.design_evaluator import DesignEvaluator
@@ -23,9 +24,9 @@ class Optimiser:
         design_evaluator: DesignEvaluator,
         search_space: dict,
         metric: str,
-        search_alg: Searcher,
         max_total_trials: int,
         max_concurrent_trials: int = 1,
+        search_alg: Searcher = AxSearch(),
         data_dir: str | Path = None,
     ) -> None:
         """Initialise class instance.
@@ -39,14 +40,14 @@ class Optimiser:
         search_space : dict
             The search space for the optimisation, values must be set according
             to the Ray Tune Search Space API.
-        search_alg : Searcher
-            The search algorithm to use, must be an instance of a subclass of
-            the Ray Tune Searcher base class.
         max_total_trials : int
             The maximum number of total trials to run.
         max_concurrent_trials : int, optional
             The maximum number of concurrent trials, by default 1 (i.e.
             trials are sequential).
+        search_alg : Searcher, optional
+            The search algorithm to use, by default AxSearch(). Must be an
+            instance of a subclass of the Ray Tune Searcher base class.
         data_dir : str | Path, optional
             Path to the data directory to store outputs, by default None (in
             which case a subdirectory is made in the current working directory
