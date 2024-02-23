@@ -117,7 +117,7 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         self.base_input_file = Path(base_input_file)
         self.working_dir = Path(working_dir)
         self.moose_config = MooseConfig().read_config(config_path)
-        self.run_options - run_options
+        self.run_options = run_options
 
     def generate_modified_input_file(
         self,
