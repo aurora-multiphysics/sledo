@@ -25,6 +25,16 @@ class DesignEvaluator(ABC):
     subclass to perform the design evaluation procedure as required.
     """
 
+    @property
+    @abstractmethod
+    def metrics(self) -> list[str]:
+        """Property: the list of metric names.
+
+        List of metrics by which a given design's performance is evaluated.
+        These names must match the keys of the dictionary returned by the
+        evaluate_design method.
+        """
+
     @abstractmethod
     def evaluate_design(self, parameters: dict) -> dict:
         """Evaluate a design and return performance metrics.
@@ -41,16 +51,6 @@ class DesignEvaluator(ABC):
             evaluated.
         """
 
-    @property
-    @abstractmethod
-    def metrics(self):
-        """List of metric names.
-
-        List of metrics by which a given design's performance is evaluated.
-        These names must match the keys of the dictionary returned by the
-        evaluate_design method.
-        """
-
 
 class TestFunctionDesignEvaluator(DesignEvaluator):
     """DesignEvaluator subclass which evaluates a test function."""
@@ -58,9 +58,13 @@ class TestFunctionDesignEvaluator(DesignEvaluator):
     def __init__(self, test_function: str = "three_hump_camel") -> None:
         self.test_function = getattr(self, test_function)
         metrics_dict = {
-            "three_hump_camel": "y1"
+            "three_hump_camel": ["y1"]
         }
-        self.metrics = metrics_dict[test_function]
+        self._metrics = metrics_dict[test_function]
+
+    @property
+    def metrics(self):
+        return self._metrics
 
     def three_hump_camel(x1, x2):
         result = (
@@ -113,11 +117,15 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
             Dict of options for running the simulation, by default
             { "n_tasks": 1, "n_threads": 4, "redirect_out": False }.
         """
-        self.metrics = metrics
+        self._metrics = metrics
         self.base_input_file = Path(base_input_file)
         self.working_dir = Path(working_dir)
         self.moose_config = MooseConfig().read_config(config_path)
         self.run_options = run_options
+
+    @property
+    def metrics(self):
+        return self._metrics
 
     def generate_modified_input_file(
         self,
