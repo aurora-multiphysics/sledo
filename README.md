@@ -46,7 +46,15 @@ pip3 install --editable .
 
 # Getting started
 
-To start using `sledo``, please refer to the `tutorials` and `examples` folders for example usage.
+To start using `sledo`, please refer to the `tutorials` and `examples` folders for example usage.
+
+Before using `sledo`, please see the following section on providing access to your MOOSE application of choice for running simulations.
+
+## MOOSE (Multiphysics Object Oriented Simulation Environment)
+
+While `sledo` itself is a pure python project, it is intended to be used alongside MOOSE.
+The simplest way to give `sledo` visibility of your MOOSE installation and chosen MOOSE app is to fill in the required paths in `moose_config.json`.
+If you don't have MOOSE installed already, there are several MOOSE applications available alongside `sledo` in the Aurora Multiphysics organisation (https://github.com/aurora-multiphysics), such as `proteus`, `aurora`, and `apollo`; each is focussed on different physics domains, so choose the one appropriate for your design problem.
 
 # Contributors
 
