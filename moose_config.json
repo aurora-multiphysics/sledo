@@ -1,0 +1,5 @@
+{
+    "main_path": "/path/to/moose",
+    "app_path": "/path/to/moose-app",
+    "app_name": "moose-app"
+}
