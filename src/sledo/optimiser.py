@@ -23,7 +23,6 @@ class Optimiser:
         name: str,
         design_evaluator: DesignEvaluator,
         search_space: dict,
-        metric: str,
         max_total_trials: int,
         max_concurrent_trials: int = 1,
         search_alg: Searcher = AxSearch(),
@@ -57,8 +56,13 @@ class Optimiser:
         self.design_evaluator = design_evaluator
         self.search_space = search_space
 
-        # Get metrics from design evaluator.
-        self.metrics = design_evaluator.metrics
+        # Get metric from design evaluator.
+        if len(design_evaluator.metrics) == 1:
+            self.metric = design_evaluator.metrics[0]
+        else:
+            raise ValueError(
+                """Multi-objective optimisation not yet implemented."""
+            )
 
         # Set search algorithm and limit maximum number of concurrent trials.
         self.search_alg = tune.search.ConcurrencyLimiter(
@@ -84,7 +88,7 @@ class Optimiser:
             self.evaluation_function,
             tune_config=tune.TuneConfig(
                 mode="min",
-                metric=metric,
+                metric=self.metric,
                 search_alg=self.search_alg,
                 num_samples=max_total_trials,
             ),
