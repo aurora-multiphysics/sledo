@@ -187,7 +187,7 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
 
         return simdata
 
-    def evaluate_design(self, parameters: dict) -> dict:
+    def evaluate_design(self, parameters: dict, timestep: int = -1) -> dict:
         """Evaluate a design and return performance metrics.
 
         Parameters
@@ -195,6 +195,10 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         parameters : dict
             Dictionary of parameters describing the design to be evaluated.
             Keys must match top-level parameters in the MOOSE input file.
+        timestep : int, optional
+            The timestep of the simulation from which to read performance
+            metrics, by default -1 (i.e. the final timestep will be read, in
+            the case of steady-state solutions the solved model will be read).
 
         Returns
         -------
@@ -209,6 +213,6 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
 
         metrics_dict = {}
         for metric in self.metrics:
-            metrics_dict[metric] = simdata.glob_vars[metric]
+            metrics_dict[metric] = simdata.glob_vars[metric][timestep]
 
         return metrics_dict
