@@ -1,39 +1,32 @@
 """
-SLEDO MooseHerder/Proteus Simple Monoblock Example
+SLEDO Simple Monoblock Example
 
 Example input file for running Bayesian optimisation of a simplified divertor
-monoblock using MooseHerder as the model instantiation tool and Proteus as the
-simulation tool.
+monoblock to minimise the peak von misses stress predicted by a
+thermomechanical MOOSE simulation.
 
 (c) Copyright UKAEA 2023-2024.
 """
 
-from pathlib import Path
 from ray import tune
-from ray.tune.search.ax import AxSearch
 
-from sledo.optimiser import Optimiser
-from examples.mooseherder.design_evaluator import DesignEvaluator
+from sledo import Optimiser, MooseHerderDesignEvaluator
+from sledo import SLEDO_ROOT, MOOSE_CONFIG_FILE
 
-MOOSE_OPT = "proteus-opt"
-EXAMPLES_DIR = Path(__file__).parent.absolute()
-BASE_INPUT_FILE = EXAMPLES_DIR / "input_files" / "simple_monoblock.i"
-WORKING_DIR = EXAMPLES_DIR / "results" / "simple_monoblock"
+EXAMPLES_DIR = SLEDO_ROOT / "examples" / "mooseherder"
+INPUT_FILE = EXAMPLES_DIR / "input_files" / "simple_monoblock_thermomech.i"
+WORKING_DIR = EXAMPLES_DIR / "results" / "simple_monoblock_thermomech"
+METRICS = ["max_stress"]
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    # Instantiate moose herder class.
-    design_evaluator = DesignEvaluator(
-        MOOSE_OPT,
-        BASE_INPUT_FILE,
-        WORKING_DIR,
+    # Instantiate design evaluator.
+    design_evaluator = MooseHerderDesignEvaluator(
+        METRICS,
+        INPUT_FILE,
+        working_dir=WORKING_DIR,
+        config_path=MOOSE_CONFIG_FILE,
     )
-
-    # Define design evaluation function.
-    def evaluate(parameters):
-        data = design_evaluator.evaluate_design(parameters)
-        stress = float(data[-1][-1])
-        return {"stress": stress}
 
     # Define a search space according to the Ray Tune API.
     # Documentation here:
@@ -46,15 +39,14 @@ if __name__ == '__main__':
     # Instantiate SLEDO optimiser.
     opt = Optimiser(
         "simple-monoblock-optimiser",
-        evaluate,
+        design_evaluator,
         search_space,
-        "stress",
-        AxSearch(),
         20,
         data_dir=WORKING_DIR,
     )
 
     results = opt.run_optimisation()
+    print(results)
 
     # Save the optimiser class instance to file.
     opt.pickle()
