@@ -15,6 +15,8 @@ from mooseherder import (
     SimData,
 )
 
+from sledo.paths import MOOSE_CONFIG_FILE
+
 
 class DesignEvaluator(ABC):
     """Abstract base class for evaluating a design. Must contain a method which
@@ -82,7 +84,7 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         metrics: list[str],
         base_input_file: Path | str,
         working_dir: Path | str = Path.cwd(),
-        config_path: Path | str = Path.cwd() / "moose_config.json",
+        config_path: Path | str = MOOSE_CONFIG_FILE,
         run_options: dict = {
             "n_tasks": 1,
             "n_threads": 4,
@@ -105,8 +107,8 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
             Path to the working directory to use for storing modified MOOSE
             input files (.i) and running MOOSE, by default Path.cwd().
         config_path : Path | str, optional
-            Path to the config file containing the required path to run MOOSE,
-            by default Path.cwd()/'moose_config.json'.
+            Path to the config file containing the required paths to run MOOSE,
+            by default 'moose_config.json' in the sledo root folder.
         run_options : dict, optional
             Dict of options for running the simulation, by default
             { "n_tasks": 1, "n_threads": 4, "redirect_out": False }.
