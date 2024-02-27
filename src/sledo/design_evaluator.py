@@ -1,5 +1,5 @@
 """
-DesignEvaluator abstract base class for SLEDO.
+SLEDO DesignEvaluator abstract base class and library of subclasses.
 
 (c) Copyright UKAEA 2024.
 """
@@ -66,7 +66,22 @@ class TestFunctionDesignEvaluator(DesignEvaluator):
     def metrics(self):
         return self._metrics
 
-    def three_hump_camel(x1, x2):
+    def three_hump_camel(self, parameters: dict) -> dict:
+        """Three-dimensional test function with three local minima.
+
+        The single global minimum is at the origin.
+
+        Parameters
+        ----------
+        parameters : dict[str, float | int]
+            Dictionary of input parameters, must contain keys "x1" and "x2".
+
+        Returns
+        -------
+        dict
+            Dictionary of output metrics, contains a single key "y1".
+        """
+        x1, x2 = parameters["x1"], parameters["x2"]
         result = (
             (2 * x1**2)
             - (1.05 * x1**4)

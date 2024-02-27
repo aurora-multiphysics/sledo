@@ -31,6 +31,11 @@ dependencies = [
   "ray==2.9.0",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest==8.0.2",
+]
+
 [project.urls]
 "Repository" = "https://github.com/aurora-multiphysics/sledo"
 "Issue Tracker" = "https://github.com/aurora-multiphysics/sledo/issues"
