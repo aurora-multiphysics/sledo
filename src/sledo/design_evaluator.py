@@ -95,10 +95,11 @@ class TestFunctionDesignEvaluator(DesignEvaluator):
 
 
 class MooseHerderDesignEvaluator(DesignEvaluator):
-    """DesignEvaluator subclass which evaluates a design via MooseHerder.
+    """DesignEvaluator implemented with MooseHerder.
 
     This design evaluator requires a base input file to be modified per design
-    iteration.
+    iteration. It generates a modified input file in the working directory,
+    runs a MOOSE simulation, and reads the appropriate output file(s).
     """
 
     def __init__(
@@ -168,6 +169,95 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         # Generate input file.
         trial_filepath = generate_modified_input_file(
             self.base_input_file,
+            self.working_dir / "trial.i",
+            parameters,
+        )
+        # Run simulation.
+        result_filepath = run_simulation(
+            trial_filepath,
+            moose_config_file=self.config_path,
+            run_options=self.run_options,
+        )
+        # Read simulation results and extract metrics.
+        simdata = read_exodus(result_filepath)
+        metrics_dict = {}
+        for metric in self.metrics:
+            metrics_dict[metric] = simdata.glob_vars[metric][timestep]
+
+        return metrics_dict
+
+
+class CatBirdMooseHerderDesignEvaluator(DesignEvaluator):
+    """DesignEvaluator subclass implemented with CatBird and MooseHerder.
+
+    This design evaluator generates an input file in the working directory,
+    runs a MOOSE simulation, and reads the appropriate output file(s).
+    """
+
+    def __init__(
+        self,
+        metrics: list[str],
+        working_dir: Path | str = Path.cwd(),
+        config_path: Path | str = MOOSE_CONFIG_FILE,
+        run_options: dict = {
+            "n_tasks": 1,
+            "n_threads": 4,
+            "redirect_out": False,
+        },
+    ) -> None:
+        """Initialise class instance with the metrics to output, the required
+        paths, and the simulation run options.
+
+        Parameters
+        ----------
+        metrics : list[str]
+            List of metric names by which a given design's performance is
+            evaluated. These names must exactly match how they appear in the
+            MOOSE simulation global variables so they can be read successfully.
+        working_dir : Path | str, optional
+            Path to the working directory to use for storing modified MOOSE
+            input files (.i) and running MOOSE, by default Path.cwd().
+        config_path : Path | str, optional
+            Path to the config file containing the required paths to run MOOSE,
+            by default 'moose_config.json' in the sledo root folder.
+        run_options : dict, optional
+            Dict of options for running the simulation, by default
+            { "n_tasks": 1, "n_threads": 4, "redirect_out": False }.
+        """
+        self._metrics = metrics
+        self.working_dir = Path(working_dir)
+        self.config_path = config_path
+        self.run_options = run_options
+
+    @property
+    def metrics(self):
+        return self._metrics
+
+    def generate_input_file(self, parameters: dict) -> None:
+        pass
+
+    def evaluate_design(self, parameters: dict, timestep: int = -1) -> dict:
+        """Evaluate a design and return performance metrics.
+
+        Parameters
+        ----------
+        parameters : dict
+            Dictionary of parameters describing the design to be evaluated.
+            Keys must match top-level parameters in the MOOSE input file.
+        timestep : int, optional
+            The timestep of the simulation from which to read performance
+            metrics, by default -1 (i.e. the final timestep will be read, in
+            the case of steady-state solutions the solved model will be read).
+
+        Returns
+        -------
+        metrics_dict : dict
+            Dictionary of metrics describing the design's performance as
+            evaluated. Key names will exactly match how they appear in the
+            MOOSE simulation global variables.
+        """
+        # Generate input file.
+        trial_filepath = self.generate_input_file(
             self.working_dir / "trial.i",
             parameters,
         )
