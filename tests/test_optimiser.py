@@ -4,16 +4,14 @@ Tests for the SLEDO Optimiser class.
 (c) Copyright UKAEA 2023-2024.
 """
 
+import pytest
+
 from sledo.optimiser import Optimiser
 from sledo.design_evaluator import TestFunctionDesignEvaluator
 
 from ray import tune
-from ray.tune.search.ax import AxSearch
 from ray.tune.result_grid import ResultGrid
 from ray.tune.search import ConcurrencyLimiter
-
-import pytest
-
 
 NAME = "three_hump_camel_optimiser"
 DESIGN_EVALUATOR = TestFunctionDesignEvaluator(
@@ -23,7 +21,6 @@ SEARCH_SPACE = {
     "x1": tune.uniform(-5.0, +5.0),
     "x2": tune.uniform(-5.0, +5.0),
 }
-
 
 
 @pytest.fixture(scope="session")
