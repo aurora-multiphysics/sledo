@@ -1,5 +1,5 @@
 """
-Optimiser base class for SLEDO.
+Optimiser class for SLEDO.
 
 (c) Copyright UKAEA 2023-2024.
 """
