@@ -13,9 +13,9 @@ from ray import tune
 from sledo import Optimiser, MooseHerderDesignEvaluator
 from sledo import SLEDO_ROOT, MOOSE_CONFIG_FILE
 
-EXAMPLES_DIR = SLEDO_ROOT / "examples" / "mooseherder"
+EXAMPLES_DIR = SLEDO_ROOT / "examples"
 INPUT_FILE = EXAMPLES_DIR / "input_files" / "monoblock_thermomech.i"
-WORKING_DIR = EXAMPLES_DIR / "results" / "simple_monoblock_thermomech"
+WORKING_DIR = EXAMPLES_DIR / "results" / "example_2"
 METRICS = ["max_stress"]
 
 if __name__ == "__main__":
