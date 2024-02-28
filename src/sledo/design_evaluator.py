@@ -1,20 +1,19 @@
 """
 SLEDO DesignEvaluator abstract base class and library of subclasses.
 
+Each subclass implements a specific design evaluation procedure.
+
 (c) Copyright UKAEA 2024.
 """
 
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from mooseherder import (
-    MooseConfig,
-    InputModifier,
-    MooseRunner,
-    ExodusReader,
-    SimData,
+from sledo.mooseherder_functions import (
+    generate_modified_input_file,
+    run_simulation,
+    read_exodus,
 )
-
 from sledo.paths import MOOSE_CONFIG_FILE
 
 
@@ -96,7 +95,11 @@ class TestFunctionDesignEvaluator(DesignEvaluator):
 
 
 class MooseHerderDesignEvaluator(DesignEvaluator):
-    """DesignEvaluator subclass which evaluates a design via MooseHerder."""
+    """DesignEvaluator subclass which evaluates a design via MooseHerder.
+
+    This design evaluator requires a base input file to be modified per design
+    iteration.
+    """
 
     def __init__(
         self,
@@ -135,82 +138,12 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         self._metrics = metrics
         self.base_input_file = Path(base_input_file)
         self.working_dir = Path(working_dir)
-        self.moose_config = MooseConfig().read_config(config_path)
+        self.config_path = config_path
         self.run_options = run_options
 
     @property
     def metrics(self):
         return self._metrics
-
-    def generate_modified_input_file(
-        self,
-        parameters: dict,
-    ) -> Path:
-        """Generate a modified MOOSE input file (.i) with specified parameters.
-        Generated file will use the filename "trial.i".
-
-        Parameters
-        ----------
-        parameters : dict
-            Dictionary of parameters to use in the modified file. Keys must
-            match top-level parameters in the input file.
-
-        Returns
-        -------
-        Path
-            Path to the generated input file for the given trial.
-        """
-        moose_mod = InputModifier(
-            str(self.base_input_file), comment_char="#", end_char=""
-        )
-        moose_mod.update_vars(parameters)
-        new_input_file = self.working_dir / "trial.i"
-        moose_mod.write_file(new_input_file)
-
-        return new_input_file
-
-    def run_simulation(
-        self,
-        input_filepath: Path | str,
-        run_options: dict = None,
-    ) -> None:
-        """Run a MOOSE simulation.
-
-        Parameters
-        ----------
-        input_filepath : Path | str
-            Path to the moose input file (.i) to run.
-        run_options : dict, optional
-            Dictionary of options for running the simulation, overrides those
-            set during __init__, by default None.
-        """
-        moose_runner = MooseRunner(self.moose_config)
-        moose_runner.set_input_file(Path(input_filepath))
-        if not run_options:
-            run_options = self.run_options
-        moose_runner.set_run_opts(**run_options)
-        moose_runner.run()
-
-    def read_exodus(self, filepath: Path | str = None) -> SimData:
-        """Read the simulation results from exodus file.
-
-        Parameters
-        ----------
-        filepath : Path | str, optional
-            Path to the exodus file to read, by default "trial_out.e" in the
-            set working directory (self.working_dir) is used.
-
-        Returns
-        -------
-        SimData
-            SimData object containing the simulation results read from file.
-        """
-        if not filepath:
-            filepath = self.working_dir / "trial_out.e"
-        exodus_reader = ExodusReader(filepath)
-        simdata = exodus_reader.read_all_sim_data()
-
-        return simdata
 
     def evaluate_design(self, parameters: dict, timestep: int = -1) -> dict:
         """Evaluate a design and return performance metrics.
@@ -232,10 +165,20 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
             evaluated. Key names will exactly match how they appear in the
             MOOSE simulation global variables.
         """
-        trial_filepath = self.generate_modified_input_file(parameters)
-        self.run_simulation(trial_filepath)
-        simdata = self.read_exodus()
-
+        # Generate input file.
+        trial_filepath = generate_modified_input_file(
+            self.base_input_file,
+            self.working_dir / "trial.i",
+            parameters,
+        )
+        # Run simulation.
+        result_filepath = run_simulation(
+            trial_filepath,
+            moose_config_file=self.config_path,
+            run_options=self.run_options,
+        )
+        # Read simulation results and extract metrics.
+        simdata = read_exodus(result_filepath)
         metrics_dict = {}
         for metric in self.metrics:
             metrics_dict[metric] = simdata.glob_vars[metric][timestep]
