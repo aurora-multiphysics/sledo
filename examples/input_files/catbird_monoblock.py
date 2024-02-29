@@ -102,7 +102,13 @@ class MonoblockModel(MooseModel):
     def __init__(self, factory_in):
         super().__init__(factory_in)
         assert isinstance(factory_in, MonoblockFactory)
+        self._geom = MonoblockGeometry()
         self._concretise_model()
+
+    def modify_parameters(self, new_parameters: dict):
+        for param in new_parameters:
+            value = new_parameters[param]
+            setattr(self._geom, param, value)
 
     def _concretise_model(self):
         # Set executioner attributes
@@ -117,26 +123,27 @@ class MonoblockModel(MooseModel):
         self.second_order = False
 
         # Add mesh generators (using kwarg syntax)
-        geom = MonoblockGeometry()
         self.add_mesh_generator(
             "mesh_monoblock",
             "PolygonConcentricCircleMeshGenerator",
             num_sides=4,
-            polygon_size=geom.monoBWidth / 2,
+            polygon_size=self._geom.monoBWidth / 2,
             polygon_size_style="apothem",
             ring_radii=[
-                geom.pipeIntDiam / 2,
-                geom.pipeExtDiam / 2,
-                geom.intLayerExtDiam / 2,
+                self._geom.pipeIntDiam / 2,
+                self._geom.pipeExtDiam / 2,
+                self._geom.intLayerExtDiam / 2,
             ],
             num_sectors_per_side=[
-                geom.pipeCircSectDivs,
-                geom.pipeCircSectDivs,
-                geom.pipeCircSectDivs,
-                geom.pipeCircSectDivs,
+                self._geom.pipeCircSectDivs,
+                self._geom.pipeCircSectDivs,
+                self._geom.pipeCircSectDivs,
+                self._geom.pipeCircSectDivs,
             ],
-            ring_intervals=[1, geom.pipeRadDivs, geom.intLayerRadDivs],
-            background_intervals=geom.monoBRadDivs,
+            ring_intervals=[
+                1, self._geom.pipeRadDivs, self._geom.intLayerRadDivs
+            ],
+            background_intervals=self._geom.monoBRadDivs,
             preserve_volumes="on",
             flat_side_up=True,
             ring_block_names="void pipe interlayer",
@@ -150,12 +157,12 @@ class MonoblockModel(MooseModel):
             "mesh_armour",
             "GeneratedMeshGenerator",
             dim=2,
-            xmin=(geom.monoBWidth / -2),
-            xmax=(geom.monoBWidth / 2),
-            ymin=(geom.monoBWidth / 2),
-            ymax=(geom.monoBWidth / 2 + geom.monoBArmHeight),
-            nx=(geom.pipeCircSectDivs),
-            ny=(geom.monoBArmDivs),
+            xmin=(self._geom.monoBWidth / -2),
+            xmax=(self._geom.monoBWidth / 2),
+            ymin=(self._geom.monoBWidth / 2),
+            ymax=(self._geom.monoBWidth / 2 + self._geom.monoBArmHeight),
+            nx=(self._geom.pipeCircSectDivs),
+            ny=(self._geom.monoBArmDivs),
             boundary_name_prefix="armour",
         )
 
@@ -199,8 +206,8 @@ class MonoblockModel(MooseModel):
             "AdvancedExtruderGenerator",
             input="merge_boundary_names",
             direction="0 0 1",
-            heights=geom.monoBDepth,
-            num_layers=geom.extrudeDivs,
+            heights=self._geom.monoBDepth,
+            num_layers=self._geom.extrudeDivs,
         )
 
         self.add_mesh_generator(
@@ -208,14 +215,14 @@ class MonoblockModel(MooseModel):
             "BoundingBoxNodeSetGenerator",
             input="extrude",
             bottom_left=[
-                -geom.ctol,
-                (geom.monoBWidth / -2) - geom.ctol,
-                -geom.tol,
+                -self._geom.ctol,
+                (self._geom.monoBWidth / -2) - self._geom.ctol,
+                -self._geom.tol,
             ],
             top_right=[
-                geom.ctol,
-                (geom.monoBWidth / -2) + geom.ctol,
-                geom.tol,
+                self._geom.ctol,
+                (self._geom.monoBWidth / -2) + self._geom.ctol,
+                self._geom.tol,
             ],
             new_boundary="centre_x_bottom_y_back_z",
         )
@@ -225,14 +232,14 @@ class MonoblockModel(MooseModel):
             "BoundingBoxNodeSetGenerator",
             input="name_node_centre_x_bottom_y_back_z",
             bottom_left=[
-                -geom.ctol,
-                (geom.monoBWidth / -2) - geom.ctol,
-                geom.monoBDepth - geom.tol,
+                -self._geom.ctol,
+                (self._geom.monoBWidth / -2) - self._geom.ctol,
+                self._geom.monoBDepth - self._geom.tol,
             ],
             top_right=[
-                geom.ctol,
-                (geom.monoBWidth / -2) + geom.ctol,
-                geom.monoBDepth + geom.tol,
+                self._geom.ctol,
+                (self._geom.monoBWidth / -2) + self._geom.ctol,
+                self._geom.monoBDepth + self._geom.tol,
             ],
             new_boundary="centre_x_bottom_y_front_z",
         )
@@ -242,14 +249,14 @@ class MonoblockModel(MooseModel):
             "BoundingBoxNodeSetGenerator",
             input="name_node_centre_x_bottom_y_front_z",
             bottom_left=[
-                (geom.monoBWidth / -2) - geom.ctol,
-                (geom.monoBWidth / -2) - geom.ctol,
-                (geom.monoBDepth / 2) - geom.tol,
+                (self._geom.monoBWidth / -2) - self._geom.ctol,
+                (self._geom.monoBWidth / -2) - self._geom.ctol,
+                (self._geom.monoBDepth / 2) - self._geom.tol,
             ],
             top_right=[
-                (geom.monoBWidth / -2) + geom.ctol,
-                (geom.monoBWidth / -2) + geom.ctol,
-                (geom.monoBDepth / 2) + geom.tol,
+                (self._geom.monoBWidth / -2) + self._geom.ctol,
+                (self._geom.monoBWidth / -2) + self._geom.ctol,
+                (self._geom.monoBDepth / 2) + self._geom.tol,
             ],
             new_boundary="left_x_bottom_y_centre_z",
         )
@@ -259,14 +266,14 @@ class MonoblockModel(MooseModel):
             "BoundingBoxNodeSetGenerator",
             input="name_node_left_x_bottom_y_centre_z",
             bottom_left=[
-                (geom.monoBWidth / 2) - geom.ctol,
-                (geom.monoBWidth / -2) - geom.ctol,
-                (geom.monoBDepth / 2) - geom.tol,
+                (self._geom.monoBWidth / 2) - self._geom.ctol,
+                (self._geom.monoBWidth / -2) - self._geom.ctol,
+                (self._geom.monoBDepth / 2) - self._geom.tol,
             ],
             top_right=[
-                (geom.monoBWidth / 2) + geom.ctol,
-                (geom.monoBWidth / -2) + geom.ctol,
-                (geom.monoBDepth / 2) + geom.tol,
+                (self._geom.monoBWidth / 2) + self._geom.ctol,
+                (self._geom.monoBWidth / -2) + self._geom.ctol,
+                (self._geom.monoBDepth / 2) + self._geom.tol,
             ],
             new_boundary="right_x_bottom_y_centre_z",
         )

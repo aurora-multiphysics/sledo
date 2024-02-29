@@ -9,6 +9,7 @@ Each subclass implements a specific design evaluation procedure.
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+from catbird import MooseModel
 from sledo.mooseherder_functions import (
     generate_modified_input_file,
     run_simulation,
@@ -139,7 +140,7 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         self._metrics = metrics
         self.base_input_file = Path(base_input_file)
         self.working_dir = Path(working_dir)
-        self.config_path = config_path
+        self.config_path = Path(config_path)
         self.run_options = run_options
 
     @property
@@ -197,6 +198,7 @@ class CatBirdMooseHerderDesignEvaluator(DesignEvaluator):
     def __init__(
         self,
         metrics: list[str],
+        model: MooseModel,
         working_dir: Path | str = Path.cwd(),
         config_path: Path | str = MOOSE_CONFIG_FILE,
         run_options: dict = {
@@ -214,6 +216,9 @@ class CatBirdMooseHerderDesignEvaluator(DesignEvaluator):
             List of metric names by which a given design's performance is
             evaluated. These names must exactly match how they appear in the
             MOOSE simulation global variables so they can be read successfully.
+        model : MooseModel
+            A catbird MooseModel capable of updating parameters and writing a
+            MOOSE input file.
         working_dir : Path | str, optional
             Path to the working directory to use for storing modified MOOSE
             input files (.i) and running MOOSE, by default Path.cwd().
@@ -225,16 +230,45 @@ class CatBirdMooseHerderDesignEvaluator(DesignEvaluator):
             { "n_tasks": 1, "n_threads": 4, "redirect_out": False }.
         """
         self._metrics = metrics
+        self._model = model
         self.working_dir = Path(working_dir)
-        self.config_path = config_path
+        self.config_path = Path(config_path)
         self.run_options = run_options
 
     @property
     def metrics(self):
         return self._metrics
 
-    def generate_input_file(self, parameters: dict) -> None:
-        pass
+    def generate_input_file(
+        self, input_filepath: Path | str, parameters: dict
+    ):
+        """Generate a MOOSE input file (.i) with specified parameters.
+
+        Parameters
+        ----------
+        input_filepath : Path | str
+            Path to input file to be generated. The .i extension will be added
+            if not passed.
+        parameters : dict
+            Dictionary of parameters to use in the modified file. Keys must
+            match top-level parameters in the input file.
+
+        Returns
+        -------
+        input_filepath : Path
+            Path to the generated input file for the given trial.
+        """
+        self._model.modify_parameters(parameters)
+
+        # Write input file, ensuring .i extension is used.
+        input_filepath = Path(input_filepath)
+        if input_filepath.suffix != ".i":
+            input_filepath = input_filepath.parent / Path(
+                input_filepath.name + ".i"
+            )
+        self._model.write(input_filepath)
+
+        return input_filepath
 
     def evaluate_design(self, parameters: dict, timestep: int = -1) -> dict:
         """Evaluate a design and return performance metrics.
