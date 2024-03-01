@@ -3,6 +3,9 @@ SLEDO Monoblock Example
 
 Example input file for running Bayesian optimisation of a divertor monoblock
 to minimise the peak temperature predicted by a thermal MOOSE simulation.
+Note that this thermal problem has a flat cost function, so nothing is
+optimised, however this example demonstrates how to interface between sledo and
+catbird.
 
 In this example, catbird is used to generate input files without the need for
 a user-supplied input file to use as a base.
@@ -16,32 +19,48 @@ from pathlib import Path
 from mooseherder import MooseConfig
 
 from sledo import Optimiser, CatBirdMooseHerderDesignEvaluator
-from sledo import SLEDO_ROOT, MOOSE_CONFIG_FILE
+from sledo import SLEDO_ROOT
 
+# This points to the file 'moose_config.json' in sledo root folder.
+# If you haven't already, please make sure you've entered the required paths
+# for your chosen MOOSE app.
+# In general, you don't need to import this as it will be used by default,
+# however you may point to a config file in a different location if you wish
+# to use something else for a given optimisation run.
+from sledo import MOOSE_CONFIG_FILE
+
+# Import the required catbird MooseFactory and MooseModel classes.
 from input_files.catbird_monoblock import (
     MonoblockFactory,
-    MonoblockGeometry,
     MonoblockModel,
 )
 
+# Set the paths required for this example.
+# In general, the user will set their own paths and pass them where required.
 EXAMPLES_DIR = SLEDO_ROOT / "examples"
 WORKING_DIR = EXAMPLES_DIR / "results" / "example_3"
 FACTORY_CONFIG_PATH = WORKING_DIR / "factory_config.json"
 INPUT_FILE_PATH = WORKING_DIR / "trial.i"
-PICKLE_FILEPATH = WORKING_DIR / "catbird-monoblock-optimiser.pickle"
-
-METRICS = ["max_temp"]
+PICKLE_FILEPATH = WORKING_DIR / "example_3_optimiser.pickle"
 
 if __name__ == "__main__":
 
-    # Only run if optimiser not already pickled.
-    if not PICKLE_FILEPATH.exists():
+    # Set metrics for optimisation. These must exactly match how they appear
+    # in your MOOSE postprocessor. In this case, we are only optimising a
+    # single objective, but the list convention is still used.
+    metrics = ["max_temp"]
 
+    # To save time when rerunning this example, only run if optimiser is not
+    # already saved as pickle. If there's a pickle from a previous run,
+    # unpickle that instead.
+    if PICKLE_FILEPATH.exists():
+        opt = Optimiser.unpickle(PICKLE_FILEPATH)
+    else:
         # Create factory, loading from config if available, else generating
         # from the objects available in the MOOSE app.
-        moose_config = MooseConfig().read_config(
-            MOOSE_CONFIG_FILE
-        ).get_config()
+        moose_config = (
+            MooseConfig().read_config(MOOSE_CONFIG_FILE).get_config()
+        )
         app_exe = Path(moose_config["app_path"]) / moose_config["app_name"]
 
         if FACTORY_CONFIG_PATH.is_file():
@@ -50,26 +69,22 @@ if __name__ == "__main__":
             factory = MonoblockFactory(app_exe)
             factory.write_config(str(FACTORY_CONFIG_PATH))
 
-        # geom
-        # modify geom
-        # pass to monoblock model
+        # Instantiate Monoblock catbird model.
         model = MonoblockModel(factory)
-
-        # Write out our input file
-        input_name = WORKING_DIR / "monoblock_thermal.i"
-        model.write(input_name)
 
         # Instantiate design evaluator.
         design_evaluator = CatBirdMooseHerderDesignEvaluator(
-            METRICS,
+            metrics,
             model,
-            working_dir=WORKING_DIR,
-            config_path=MOOSE_CONFIG_FILE,
+            working_dir=WORKING_DIR,  # Directory to store generated files.
+            config_path=MOOSE_CONFIG_FILE,  # Contains required MOOSE paths.
         )
 
-        # Define a search space according to the ray tune API.
+        # Define a search space according to the Ray Tune API.
         # Documentation here:
         # https://docs.ray.io/en/latest/tune/api/search_space.html
+        # The variable names must exactly match how they appear in the catbird
+        # model so that they can be updated for each design iteration.
         search_space = {
             "pipeThick": tune.uniform(1e-3, 6e-3),
             "intLayerThick": tune.uniform(1e-3, 6e-3),
@@ -86,12 +101,9 @@ if __name__ == "__main__":
             data_dir=WORKING_DIR,
         )
 
-        # Save the optimiser class instance to file.
+        # Save the optimiser class instance to file, if something goes wrong in
+        # the optimisation step, this will be reloaded to save time rerunning.
         opt.pickle(PICKLE_FILEPATH)
-
-    # If there's a pickle from a previous run, unpickle that instead.
-    else:
-        opt = Optimiser.unpickle(PICKLE_FILEPATH)
 
     # Run optimisation.
     results = opt.run_optimisation()
@@ -99,3 +111,6 @@ if __name__ == "__main__":
 
     # Save the optimiser class instance to file.
     opt.pickle(PICKLE_FILEPATH)
+
+    # To load the optimiser class from file, you can then run.
+    opt = Optimiser.unpickle(PICKLE_FILEPATH)
