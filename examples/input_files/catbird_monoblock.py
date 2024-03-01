@@ -141,7 +141,9 @@ class MonoblockModel(MooseModel):
                 self._geom.pipeCircSectDivs,
             ],
             ring_intervals=[
-                1, self._geom.pipeRadDivs, self._geom.intLayerRadDivs
+                1,
+                self._geom.pipeRadDivs,
+                self._geom.intLayerRadDivs,
             ],
             background_intervals=self._geom.monoBRadDivs,
             preserve_volumes="on",
