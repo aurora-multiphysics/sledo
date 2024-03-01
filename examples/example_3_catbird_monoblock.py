@@ -94,10 +94,10 @@ if __name__ == "__main__":
 
         # Instantiate SLEDO optimiser.
         opt = Optimiser(
-            "catbird-monoblock-optimiser",
             design_evaluator,
             search_space,
             20,
+            name="catbird-monoblock-optimiser",
             data_dir=WORKING_DIR,
         )
 

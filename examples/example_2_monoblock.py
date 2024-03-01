@@ -57,10 +57,10 @@ if __name__ == "__main__":
 
     # Instantiate SLEDO optimiser.
     opt = Optimiser(
-        "monoblock-optimiser",
         design_evaluator,
         search_space,
         20,
+        name="monoblock-optimiser",
         data_dir=WORKING_DIR,
     )
 

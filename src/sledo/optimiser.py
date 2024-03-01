@@ -20,20 +20,18 @@ class Optimiser:
 
     def __init__(
         self,
-        name: str,
         design_evaluator: DesignEvaluator,
         search_space: dict,
         max_total_trials: int,
         max_concurrent_trials: int = 1,
         search_alg: Searcher = AxSearch(),
+        name: str = None,
         data_dir: str | Path = None,
     ) -> None:
         """Initialise class instance.
 
         Parameters
         ----------
-        name : str
-            The name of the instance.
         design_evaluator : DesignEvaluator
             The DesignEvaluator subclass used to evaluate each design.
         search_space : dict
@@ -47,18 +45,21 @@ class Optimiser:
         search_alg : Searcher, optional
             The search algorithm to use, by default AxSearch(). Must be an
             instance of a subclass of the Ray Tune Searcher base class.
+        name : str
+            The name of the optimiser, will be passed to the Ray Tune tuner. By
+            default, None, in which case a name is constructed by concatenating
+            the metric names found in design_evaluator.
         data_dir : str | Path, optional
             Path to the data directory to store outputs, by default None (in
             which case a subdirectory is made in the current working directory
             with a name set by the name arg of this class).
         """
-        self.name = name
         self.design_evaluator = design_evaluator
         self.search_space = search_space
 
-        # Get metric from design evaluator.
+        # Get metrics from design evaluator.
         if len(design_evaluator.metrics) == 1:
-            self.metric = design_evaluator.metrics[0]
+            self.metrics = design_evaluator.metrics
         else:
             raise ValueError(
                 """Multi-objective optimisation not yet implemented."""
@@ -68,6 +69,12 @@ class Optimiser:
         self.search_alg = tune.search.ConcurrencyLimiter(
             search_alg, max_concurrent=max_concurrent_trials
         )
+
+        # Set name, construct from metrics if not passed.
+        if name:
+            self.name = name
+        else:
+            self.name = "_".join(self.metrics) + "_optimiser"
 
         # Set data directory and create the directory if it doesn't exist yet.
         if data_dir:
@@ -88,7 +95,7 @@ class Optimiser:
             self.evaluation_function,
             tune_config=tune.TuneConfig(
                 mode="min",
-                metric=self.metric,
+                metric=self.metrics[0],
                 search_alg=self.search_alg,
                 num_samples=max_total_trials,
             ),
