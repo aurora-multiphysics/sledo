@@ -59,7 +59,7 @@ if __name__ == "__main__":
     opt = Optimiser(
         design_evaluator,
         search_space,
-        20,
+        max_total_trials=20,
         name="monoblock-optimiser",
         data_dir=WORKING_DIR,
     )
