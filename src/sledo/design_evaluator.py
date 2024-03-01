@@ -262,17 +262,17 @@ class CatBirdMooseHerderDesignEvaluator(DesignEvaluator):
             Type of postprocessor to use, by default "ElementExtremeValue".
         """
         if metric not in self._metrics:
-            print(
+            msg = (
                 "Warning: Metric not found in optimisation metrics."
                 "Nothing has been added."
             )
-            return
+            raise ValueError(msg)
         if metric in self._model.postprocessors.objects.keys():
-            print(
+            msg = (
                 "Warning: Postprocessor already exists for this metric."
                 "Nothing has been added."
             )
-            return
+            raise ValueError(msg)
         self._model.add_postprocessor(
             metric,
             postprocessor_type,
