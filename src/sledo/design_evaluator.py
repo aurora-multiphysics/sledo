@@ -239,6 +239,47 @@ class CatBirdMooseHerderDesignEvaluator(DesignEvaluator):
     def metrics(self):
         return self._metrics
 
+    def add_metric_postprocessor(
+        self,
+        metric: str,
+        variable_name: str,
+        postprocessor_type: str = "ElementExtremeValue",
+        **postprocessor_kwargs,
+    ):
+        """Add a Postprocessor object to the MOOSE input file with a name
+        matching an optimisation metric. Available postprocessors here:
+        https://mooseframework.inl.gov/syntax/Postprocessors/index.html
+
+        Parameters
+        ----------
+        metric : str
+            Name of metric to add a postprocessor for, must match exactly the
+            name of an optimisation metric so that it may be reported to the
+            optimiser.
+        variable_name : str
+            Name of variable upon which the postprocessor will act.
+        postprocessor_type : str, optional
+            Type of postprocessor to use, by default "ElementExtremeValue".
+        """
+        if metric not in self._metrics:
+            print(
+                "Warning: Metric not found in optimisation metrics."
+                "Nothing has been added."
+            )
+            return
+        if metric in self._model.postprocessors.objects.keys():
+            print(
+                "Warning: Postprocessor already exists for this metric."
+                "Nothing has been added."
+            )
+            return
+        self._model.add_postprocessor(
+            metric,
+            postprocessor_type,
+            variable_name,
+            **postprocessor_kwargs,
+        )
+
     def generate_input_file(
         self, input_filepath: Path | str, parameters: dict
     ):
