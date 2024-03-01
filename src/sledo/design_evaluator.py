@@ -123,7 +123,7 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         metrics : list[str]
             List of metric names by which a given design's performance is
             evaluated. These names must exactly match how they appear in the
-            MOOSE simulation global variables so they can be read successfully.
+            MOOSE simulation postprocessors so they can be read successfully.
         base_input_file : Path | str
             Path to the base MOOSE input file (.i) to use as the basis for
             generating modified files. This file will not be modified.
@@ -215,7 +215,7 @@ class CatBirdMooseHerderDesignEvaluator(DesignEvaluator):
         metrics : list[str]
             List of metric names by which a given design's performance is
             evaluated. These names must exactly match how they appear in the
-            MOOSE simulation global variables so they can be read successfully.
+            MOOSE simulation postprocessors so they can be read successfully.
         model : MooseModel
             A catbird MooseModel capable of updating parameters and writing a
             MOOSE input file.
