@@ -27,7 +27,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = [
+ci = [
+    "flake8==7.0.0",
     "pytest==8.0.2",
 ]
 

@@ -22,11 +22,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Create venv and install sledo
-        run: |
-          python -m venv venv
-          . venv/bin/activate
-          pip install .[test]
+      - name: Install sledo
+        run: pip install .[ci]
 
       - name: Clone and install mooseherder
         run: |
@@ -43,12 +40,7 @@ jobs:
           pip install ../catbird
 
       - name: Run linter
-        run: |
-          . venv/bin/activate
-          pip install flake8
-          flake8 . --exclude=venv* --count --max-complexity=10 --max-line-length=79 --statistics
+        run: flake8 . --exclude=venv* --count --max-complexity=10 --max-line-length=79 --statistics
 
       - name: Run tests
-        run: |
-          pip install pytest
-          pytest tests
+        run: pytest tests
