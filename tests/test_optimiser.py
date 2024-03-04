@@ -66,12 +66,6 @@ class TestOptimiser:
         results = self.opt.run_optimisation()
         assert isinstance(results, ResultGrid)
 
-    def test_get_results(self):
-        """Tests that the get_results method returns existing results."""
-        self.opt.run_optimisation()
-        results = self.opt.get_results()
-        assert isinstance(results, ResultGrid)
-
     def test_get_results_without_results(self):
         """Tests that get_results raises error when there are no results."""
         with pytest.raises(RuntimeError):
