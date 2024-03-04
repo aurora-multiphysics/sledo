@@ -1,27 +1,42 @@
 #-------------------------------------------------------------------------
+# simple_monoblock_thermomech.i
+# Author: Luke Humphrey
+# (c) Copyright UKAEA 2023-2024.
+# 
+#-------------------------------------------------------------------------
 # DESCRIPTION
-
-# Input file for computing the von-mises stress between the coolant pipe of a
-# tokamak divertor monoblock and its armour due to thermal expansion.
+# 
+# Input file for a thermomechanical simulation of a simplified divertor
+# monoblock.
+#
+# Computes the von-mises stress between the coolant pipe of a tokamak divertor
+# monoblock and its armour due to thermal expansion.
+#
 # The monoblock is typically comprised of a copper-chromium-zirconium (CuCrZr)
 # pipe surrounded by tungsten armour with an OFHC copper pipe interlayer in
 # between. This simplified model is comprised of a solid/filled OFHC copper
 # cylinder by surrounded by tungsten armour; the CuCrZr pipe is not included
 # and coolant flow is not modelled.
+#
+# Temperature-variant material properties are implemented via linear
+# interpolation from available data.
+#
+# Parameters describing the geometry are present at the top of the file above
+# the MOOSE tree structure. These parameters can be modified to produce a
+# monoblock design with the specified geometry.
+#
 # The mesh uses first order elements with a nominal mesh refinement of one 
 # division per millimetre.
+#
 # The boundary conditions are the stress-free temperature and the block
 # temperature to which the block is uniformly heated.
+#
 # The solve is steady state and outputs temperature, displacement (magnitude
 # as well as the x, y, z components), and von mises stress.
 
 #-------------------------------------------------------------------------
 # PARAMETER DEFINITIONS
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# File handling
-name=simple_monoblock
-outputDir=outputs
+#_*
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Geometry
@@ -83,6 +98,7 @@ ctol=${fparse intLayerExtCirc / (8 * 4 * pipeCircSectDivs)}
 stressFreeTemp=20   # degC
 blockTemp=100       # degC
 
+#**
 #-------------------------------------------------------------------------
 
 [GlobalParams]
@@ -599,9 +615,5 @@ blockTemp=100       # degC
 
 [Outputs]
   exodus = true
-  [write_to_file]
-    type = CSV
-    show = 'max_stress'
-    file_base = '${outputDir}/${name}_out'
-  []
+  csv = true
 []

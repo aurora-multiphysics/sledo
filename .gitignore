@@ -166,4 +166,4 @@ cython_debug/
 results
 
 # Ignore config file
-config.yaml
+moose_config.json

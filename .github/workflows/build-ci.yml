@@ -5,56 +5,42 @@ on:
   # Run the workflow on push to "main" branch
   push:
     branches: [ "main" ]
-  # Run the workflow on pull request to "main" branch
+  # Run the workflow on pull request to "main" branch and ready for review
   pull_request:
     branches: [ "main"]
+    types: [ready_for_review]
   # Run the workflow manually
   workflow_dispatch:
 
 # This section controls which jobs the workflow will run
 jobs:
-  run-linter:
+  lint-and-test:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Create venv and install requirements
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install sledo
+        run: pip install .[ci]
+
+      - name: Clone and install mooseherder
         run: |
-          python3 -m venv venv
-          . venv/bin/activate
-          pip3 install build --upgrade
-          python3 -m build
-          pip3 install ./dist/*.whl
+          cd ..
+          git clone https://github.com/ScepticalRabbit/mooseherder
+          cd sledo
+          pip install ../mooseherder
+
+      - name: Clone and install catbird
+        run: |
+          cd ..
+          git clone https://github.com/helen-brooks/catbird
+          cd sledo
+          pip install ../catbird
 
       - name: Run linter
-        run: |
-          . venv/bin/activate
-          pip3 install flake8
-          flake8 . --exclude=venv* --count --max-complexity=10 --max-line-length=79 --statistics
-
-  build-and-test:
-    runs-on: ubuntu-latest
-
-    env:
-      PRCOMMITSHA : ${{ github.event.pull_request.head.sha }}
-
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Print github context
-        run: echo $PRCOMMITSHA
-
-      - name: Docker build (pull request)
-        if:  ${{ github.event.pull_request.head.sha != '' }}
-        run: docker build -t ci-sledo-ubuntu --build-arg build_git_sha=$PRCOMMITSHA docker/sledo-ubuntu/
-  
-      - name:  Docker build (push)
-        if:  ${{ github.event.pull_request.head.sha == '' }}
-        run: docker build -t ci-sledo-ubuntu --build-arg build_git_sha=$GITHUB_SHA docker/sledo-ubuntu/
+        run: flake8 . --exclude=venv* --count --max-complexity=10 --max-line-length=79 --statistics
 
       - name: Run tests
-        run: |
-          pip3 install pytest
-          pytest tests
-  
+        run: pytest tests

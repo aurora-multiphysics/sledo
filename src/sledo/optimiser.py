@@ -1,181 +1,136 @@
 """
-Optimiser classes for SLEDO.
+Optimiser class for SLEDO.
 
-Handles Bayesian Optimisation.
-
-(c) Copyright UKAEA 2023.
+(c) Copyright UKAEA 2023-2024.
 """
-import ax.service.ax_client
-import pathlib
+
+from pathlib import Path
 import dill
 
-# Import pyhit and moosetree from your local moose installation.
-import pyhit
-import moosetree
+from ray import train, tune
+from ray.tune.search import Searcher
+from ray.tune.search.ax import AxSearch
+from ray.tune.result_grid import ResultGrid
+
+from sledo.design_evaluator import DesignEvaluator
 
 
 class Optimiser:
-    """The SLEDO optimiser base class.
-
-    Methods
-    -------
-    load_input_file(path_to_input_file):
-        Load a MOOSE input file to serve as a base for optimisation. Save a
-        copy to the data directory.
-    generate_modified_file(filename, parameters)):
-        Generate a MOOSE input file by modifying the parameters specified. Save
-        the new file to the data directory.
-    """
+    """The SLEDO optimiser class."""
 
     def __init__(
         self,
-        name,
-        simulation_class,
-        search_space,
-        data_dir=None,
-        input_file=None,
-    ):
-        """
-        Initialise class instance.
+        design_evaluator: DesignEvaluator,
+        search_space: dict,
+        max_total_trials: int,
+        max_concurrent_trials: int = 1,
+        search_alg: Searcher = AxSearch(),
+        name: str = None,
+        data_dir: str | Path = None,
+    ) -> None:
+        """Initialise class instance.
 
-        Attributes
+        Parameters
         ----------
-        simulation_class : sledo.Simulation
-            The simulation class to use for the optimisation.
-        search_space : list[dict]
-            The search space for the optimisation.
-        data_dir : str | pathlib.Path
-            Path to the data directory for the optimisation.
-        input_file: str | pathlib.Path
-            Path to the simulation input file for the optimisation.
+        design_evaluator : DesignEvaluator
+            The DesignEvaluator subclass used to evaluate each design.
+        search_space : dict
+            The search space for the optimisation, values must be set according
+            to the Ray Tune Search Space API.
+        max_total_trials : int
+            The maximum number of total trials to run.
+        max_concurrent_trials : int, optional
+            The maximum number of concurrent trials, by default 1 (i.e.
+            trials are sequential).
+        search_alg : Searcher, optional
+            The search algorithm to use, by default AxSearch(). Must be an
+            instance of a subclass of the Ray Tune Searcher base class.
+        name : str
+            The name of the optimiser, will be passed to the Ray Tune tuner. By
+            default, None, in which case a name is constructed by concatenating
+            the metric names found in design_evaluator.
+        data_dir : str | Path, optional
+            Path to the data directory to store outputs, by default None (in
+            which case a subdirectory is made in the current working directory
+            with a name set by the name arg of this class).
         """
-        self.name = name
-        self.simulation_class = simulation_class
-
-        # Get location of each param in the moose input file (HIT format).
-        self.hit_blocks = {}
-        self.hit_names = {}
-        for param in search_space:
-            self.hit_blocks[param["name"]] = param["hit_block"]
-            param.pop("hit_block")
-            self.hit_names[param["name"]] = param["hit_name"]
-            param.pop("hit_name")
+        self.design_evaluator = design_evaluator
         self.search_space = search_space
 
-        # Set data directory.
-        if data_dir:
-            self.data_dir = pathlib.Path(data_dir)
+        # Get metrics from design evaluator.
+        if len(design_evaluator.metrics) == 1:
+            self.metrics = design_evaluator.metrics
         else:
-            self.data_dir = pathlib.Path(f"./{self.name}")
+            raise ValueError(
+                """Multi-objective optimisation not yet implemented."""
+            )
+
+        # Set search algorithm and limit maximum number of concurrent trials.
+        self.search_alg = tune.search.ConcurrencyLimiter(
+            search_alg, max_concurrent=max_concurrent_trials
+        )
+
+        # Set name, construct from metrics if not passed.
+        if name:
+            self.name = name
+        else:
+            self.name = "_".join(self.metrics) + "_optimiser"
+
+        # Set data directory and create the directory if it doesn't exist yet.
+        if data_dir:
+            self.data_dir = Path(data_dir)
+        else:
+            self.data_dir = Path(f"./{self.name}")
         if not self.data_dir.exists():
             self.data_dir.mkdir()
 
-        # Load input file, if one was passed.
-        if input_file:
-            self.load_input_file(path_to_input_file=input_file)
-
-    def load_input_file(self, path_to_input_file):
-        """Load a MOOSE input file to serve as a base for optimisation. Save a
-        copy to the data directory.
-        """
-        # Load input file.
-        filename_to_load = str(path_to_input_file)
-        moose_file = pyhit.load(filename_to_load)
-
-        # Save a copy.
-        filename_to_save = str(self.data_dir / "input_unmodified.i")
-        pyhit.write(filename_to_save, moose_file)
-
-    def generate_modified_file(self, filename, new_params):
-        """Generate a MOOSE input file by modifying the new_params specified in
-        new_params. Save the new file to the data directory.
-
-        Parameters
-        ----------
-        filename (str):
-            filename for the modified input file
-        new_params (list of dicts):
-            list of dictionaries containing information on which new_params to
-            modify
-        """
-        # Load unmodified input file from data directory.
-        path_to_base_input_file = self.data_dir / "input_unmodified.i"
-        if not path_to_base_input_file.is_file():
-            print("Base input file not found. Use load_input_file() first.")
-        root = pyhit.load(str(path_to_base_input_file))
-
-        # Locate and modify each parameter.
-        for param, value in zip(new_params.keys(), new_params.values()):
-            hit_block = self.hit_blocks[param]
-            hit_name = self.hit_names[param]
-            if hit_block:
-                block = moosetree.find(
-                    root, func=lambda n: n.fullpath == hit_block
-                )
-            else:
-                block = root
-            block[hit_name] = value
-            block.setComment(hit_name, "Modified by SLEDO")
-
-        # Write modified input file to data directory.
-        path_to_modified_file = self.data_dir / f"{filename}.i"
-        pyhit.write(path_to_modified_file, root)
-
-        return path_to_modified_file
-
-    def run_optimisation_loop(
-        self,
-        objective_name="",
-        force=False,
-        minimise=False,
-        parameter_constraints=None,
-        outcome_constraints=None,
-        max_iter=25,
-        min_acqf=None,
-    ):
-        """Run the optimisation loop.
-
-        Parameters
-        ----------
-        max_iter : int
-            The maximum number of optimisation iterations. The optimisation
-            will complete when this number of iterations is reached.
-        min_acqf : float (optional, default = None)
-            The minimum value of the acquisition function required to proceed
-            with the optimisation loop. The optimisation will complete when
-            the max of the acquisition function is below this value. If None,
-            the optimisation loop will continue to max_iter regardless of the
-            acquisition function values.
-        """
-
-        self.ax_client = ax.service.ax_client.AxClient()
-        self.ax_client.create_experiment(
-            overwrite_existing_experiment=force,
-            name=self.name,
-            parameters=self.search_space,
-            objective_name=objective_name,
-            minimize=minimise,
-            parameter_constraints=parameter_constraints,
-            outcome_constraints=outcome_constraints,
+        # Add a step to the evaluation function reporting the results of each
+        # design evaluation to the ray tune optimiser.
+        self.evaluation_function = lambda results_dict: train.report(
+            self.design_evaluator.evaluate_design(results_dict)
         )
 
-        def evaluate(filename, parameters):
-            self.generate_modified_file(filename, parameters)
-            sim = self.simulation_class(filename, self.data_dir)
-            sim.run_sim()
-            result_dict = sim.get_results()
-            return result_dict
+        # Instantiate ray tune Tuner object.
+        self.tuner = tune.Tuner(
+            self.evaluation_function,
+            tune_config=tune.TuneConfig(
+                mode="min",
+                metric=self.metrics[0],
+                search_alg=self.search_alg,
+                num_samples=max_total_trials,
+            ),
+            run_config=train.RunConfig(
+                name=self.name,
+            ),
+            param_space=search_space,
+        )
 
-        for i in range(max_iter):
-            filename = f"trial_{i}"
-            parameters, trial_index = self.ax_client.get_next_trial()
-            self.ax_client.complete_trial(
-                trial_index=trial_index,
-                raw_data=evaluate(filename, parameters),
-            )
+    def run_optimisation(self) -> ResultGrid:
+        """Run the optimisation loop and return the results.
+
+        Returns
+        -------
+        results : ResultGrid
+            Ray tune ResultGrid instance containing the results of the
+            optimisation.
+        """
+        self.results = self.tuner.fit()
+        return self.results
+
+    def get_results(self) -> ResultGrid:
+        """Get results of the optimisation.
+
+        Returns
+        -------
+        results : ResultGrid
+            Ray tune ResultGrid instance containing the results of the
+            optimisation.
+        """
+        self.results = self.tuner.get_results()
+        return self.results
 
     def pickle(self, filepath=None):
-        """Save object to file."""
+        """Save class instance to file."""
         if not filepath:
             filepath = self.data_dir / f"{self.name}.pickle"
         with open(filepath, "wb") as file:
@@ -183,6 +138,7 @@ class Optimiser:
 
     @classmethod
     def unpickle(cls, filepath):
+        """Load class instance from file."""
         with open(filepath, "rb") as f:
             obj = dill.load(f)
         if isinstance(obj, cls):

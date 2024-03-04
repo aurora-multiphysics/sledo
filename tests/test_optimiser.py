@@ -1,40 +1,26 @@
-from sledo.optimiser import (
-    Optimiser,
-)
+"""
+Tests for the SLEDO Optimiser class.
+
+(c) Copyright UKAEA 2023-2024.
+"""
 
 import pytest
-import pathlib
-import copy
 
-import pyhit
-import moosetree
+from sledo.optimiser import Optimiser
+from sledo.design_evaluator import TestFunctionDesignEvaluator
 
-from sledo.simulation import ThermoMechSimulation
+from ray import tune
+from ray.tune.result_grid import ResultGrid
+from ray.tune.search import ConcurrencyLimiter
 
-TEST_DATA_DIR = pathlib.Path("./tests/test_data/")
-TEST_SEARCH_SPACE = (
-    {
-        "name": "Length",
-        "type": "range",
-        "bounds": [1, 10],
-        "hit_block": "/Mesh/gen",
-        "hit_name": "xmax",
-    },
-    {
-        "name": "U",
-        "type": "range",
-        "bounds": [100, 200],
-        "hit_block": "/BCs/left",
-        "hit_name": "value",
-    },
-    {
-        "name": "Pi",
-        "type": "range",
-        "bounds": [3.13, 3.15],
-        "hit_block": "",
-        "hit_name": "PI",
-    },
+NAME = "three_hump_camel_optimiser"
+DESIGN_EVALUATOR = TestFunctionDesignEvaluator(
+    test_function="three_hump_camel"
 )
+SEARCH_SPACE = {
+    "x1": tune.uniform(-5.0, +5.0),
+    "x2": tune.uniform(-5.0, +5.0),
+}
 
 
 @pytest.fixture(scope="session")
@@ -51,99 +37,36 @@ class TestOptimiser:
     @pytest.fixture(autouse=True)
     def setup_method(self, tmp_data_dir):
         self.opt = Optimiser(
-            name="simple_monoblock",
-            simulation_class=ThermoMechSimulation,
-            search_space=copy.deepcopy(TEST_SEARCH_SPACE),
+            DESIGN_EVALUATOR,
+            SEARCH_SPACE,
+            max_total_trials=1,
+            name=NAME,
             data_dir=tmp_data_dir,
         )
 
     def test_init(self):
         """Test Optimiser class initiates correctly."""
+        assert self.opt.design_evaluator == DESIGN_EVALUATOR
+        assert self.opt.search_space == SEARCH_SPACE
+        assert isinstance(self.opt.search_alg, ConcurrencyLimiter)
+        assert self.opt.name == NAME
         assert self.opt.data_dir.is_dir()
+        assert isinstance(self.opt.tuner, tune.Tuner)
 
-    def test_load_input_file(self):
-        """
-        Test Optimiser can load a MOOSE input file correctly and save a
-        copy in the data dir.
-        """
-        # Test the file to be loaded exists.
-        path_to_file = TEST_DATA_DIR / "input.i"
-        assert path_to_file.is_file()
+    def test_default_name(self, tmp_data_dir):
+        expected_default_name = "y1_optimiser"
+        default_name_opt = Optimiser(
+            DESIGN_EVALUATOR, SEARCH_SPACE, 1, data_dir=tmp_data_dir
+        )
+        default_name = default_name_opt.name
+        assert default_name == expected_default_name
 
-        # Ensure a copy does not already exist.
-        path_to_copy = self.opt.data_dir / "input_unmodified.i"
-        path_to_copy.unlink(missing_ok=True)
-        assert not path_to_copy.is_file()
+    def test_run_optimisation(self):
+        """Test that the run_optimisation method returns results."""
+        results = self.opt.run_optimisation()
+        assert isinstance(results, ResultGrid)
 
-        # Load input file and test that both the original and the copy exist.
-        self.opt.load_input_file(path_to_file)
-        assert path_to_file.is_file()
-        assert path_to_copy.is_file()
-
-    def test_generate_modified_file(self):
-        """Test Optimiser can generate a modified input file correctly."""
-        # Load the input file.
-        path_to_file = TEST_DATA_DIR / "input.i"
-        self.opt.load_input_file(path_to_file)
-
-        # Generate modified input file and test that the new file exists.
-        filename = "input_modified"
-        filename_with_ext = filename + ".i"
-        new_params = {
-            "Length": 4,
-            "U": 200,
-        }
-        path_to_modified_file = self.opt.data_dir / filename_with_ext
-        path_to_modified_file.unlink(missing_ok=True)
-        assert not path_to_modified_file.is_file()
-        self.opt.generate_modified_file(filename, new_params=new_params)
-        assert path_to_modified_file.is_file()
-
-        # Test that the new file has the expected lines modified.
-        root = pyhit.load(str(path_to_modified_file))
-        mesh = moosetree.find(root, func=lambda n: n.fullpath == "/Mesh/gen")
-        leftbc = moosetree.find(root, func=lambda n: n.fullpath == "/BCs/left")
-        assert mesh.get("xmax") == new_params["Length"]
-        assert leftbc.get("value") == new_params["U"]
-
-        # Test that the original file and copy are left unmodified.
-        path_to_copy = self.opt.data_dir / "input_unmodified.i"
-        for path in (path_to_file, path_to_copy):
-            root = pyhit.load(str(path))
-            mesh = moosetree.find(
-                root, func=lambda n: n.fullpath == "/Mesh/gen"
-            )
-            left_bc = moosetree.find(
-                root, func=lambda n: n.fullpath == "/BCs/left"
-            )
-            assert mesh.get("xmax") == 3
-            assert left_bc.get("value") == 300
-
-    def test_generate_modified_file_root(self):
-        """
-        Test Optimiser can generate a modified input file correctly in the
-        case that the parameters to modify are in the moosetree root.
-        """
-        # Load the input file.
-        path_to_file = TEST_DATA_DIR / "input.i"
-        self.opt.load_input_file(path_to_file)
-
-        # Generate modified input file and test that the new file exists.
-        filename = "input_modified"
-        filename_with_ext = filename + ".i"
-        new_params = {"Pi": 6.28}
-        path_to_modified_file = self.opt.data_dir / filename_with_ext
-        path_to_modified_file.unlink(missing_ok=True)
-        assert not path_to_modified_file.is_file()
-        self.opt.generate_modified_file(filename, new_params=new_params)
-        assert path_to_modified_file.is_file()
-
-        # Test that the new file has the expected lines modified.
-        root = pyhit.load(str(path_to_modified_file))
-        assert root.get("PI") == new_params["Pi"]
-
-        # Test that the original file and copy are left unmodified.
-        path_to_copy = self.opt.data_dir / "input_unmodified.i"
-        for path in (path_to_file, path_to_copy):
-            root = pyhit.load(str(path))
-            assert root.get("PI") == 3.14
+    def test_get_results_without_results(self):
+        """Tests that get_results raises error when there are no results."""
+        with pytest.raises(RuntimeError):
+            self.opt.get_results()

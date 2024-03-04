@@ -1,51 +1,75 @@
-from sledo.optimiser import Optimiser
-from sledo.simulation import ThermoMechSimulation
+"""
+SLEDO Monoblock Example
 
-DATA_DIR = "./results/example_2"
+Example input file for running Bayesian optimisation of a divertor monoblock
+to minimise the peak von misses stress predicted by a thermomechanical
+MOOSE simulation.
 
-search_space = (
-    {
-        "name": "Pipe thickness",
-        "type": "range",
-        "hit_name": "pipeThick",
-        "hit_block": "",
-        "bounds": [1e-3, 6e-3],
-    },
-    {
-        "name": "Interlayer thickness",
-        "type": "range",
-        "hit_name": "intLayerThick",
-        "hit_block": "",
-        "bounds": [1e-3, 6e-3],
-    },
-    {
-        "name": "Block thickness",
-        "type": "range",
-        "hit_name": "monoBThick",
-        "hit_block": "",
-        "bounds": [1e-3, 6e-3],
-    },
-    {
-        "name": "Armour height",
-        "type": "range",
-        "hit_name": "monoBArmHeight",
-        "hit_block": "",
-        "bounds": [1e-3, 16e-3],
-    },
-)
+(c) Copyright UKAEA 2023-2024.
+"""
 
-opt = Optimiser(
-    name="monoblock",
-    search_space=search_space,
-    simulation_class=ThermoMechSimulation,
-    data_dir=DATA_DIR,
-)
+from ray import tune
 
-opt.load_input_file("./input_files/monoblock.i")
-opt.run_optimisation_loop(
-    objective_name="stress",
-    max_iter=20,
-    minimise=True,
-)
+from sledo import Optimiser, MooseHerderDesignEvaluator
+from sledo import SLEDO_ROOT
 
-opt.pickle()
+# This points to the file 'moose_config.json' in sledo root folder.
+# If you haven't already, please make sure you've entered the required paths
+# for your chosen MOOSE app.
+# In general, you don't need to import this as it will be used by default,
+# however you may point to a config file in a different location if you wish
+# to use something else for a given optimisation run.
+from sledo import MOOSE_CONFIG_FILE
+
+# Set the paths required for this example.
+# In general, the user will set their own paths and pass them where required.
+EXAMPLES_DIR = SLEDO_ROOT / "examples"
+INPUT_FILE = EXAMPLES_DIR / "input_files" / "monoblock_thermomech.i"
+WORKING_DIR = EXAMPLES_DIR / "results" / "example_2"
+PICKLE_FILEPATH = WORKING_DIR / "example_2_optimiser.pickle"
+
+if __name__ == "__main__":
+
+    # Set metrics for optimisation. These must exactly match how they appear
+    # in your MOOSE postprocessor. In this case, we are only optimising a
+    # single objective, but the list convention is still used.
+    metrics = ["max_stress"]
+
+    # Instantiate design evaluator.
+    design_evaluator = MooseHerderDesignEvaluator(
+        metrics,
+        INPUT_FILE,  # The base input file to be modified per design iteration.
+        working_dir=WORKING_DIR,  # Directory to store generated files.
+        config_path=MOOSE_CONFIG_FILE,  # Contains required MOOSE paths.
+    )
+
+    # Define a search space according to the Ray Tune API.
+    # Documentation here:
+    # https://docs.ray.io/en/latest/tune/api/search_space.html
+    # The variable names must exactly match how they appear in the MOOSE input
+    # file so that they can be updated for each design iteration.
+    search_space = {
+        "pipeThick": tune.uniform(1e-3, 6e-3),
+        "intLayerThick": tune.uniform(1e-3, 6e-3),
+        "monoBThick": tune.uniform(1e-3, 6e-3),
+        "monoBArmHeight": tune.uniform(1e-3, 16e-3),
+    }
+
+    # Instantiate SLEDO optimiser.
+    opt = Optimiser(
+        design_evaluator,
+        search_space,
+        max_total_trials=20,
+        name="monoblock-optimiser",
+        data_dir=WORKING_DIR,
+    )
+
+    # Run optimisation.
+    results = opt.run_optimisation()
+    print(results)
+
+    # Save the optimiser class instance to file.
+    opt.pickle(PICKLE_FILEPATH)
+
+    # To load the optimiser class from file, you can then run.
+    opt = Optimiser.unpickle(PICKLE_FILEPATH)
