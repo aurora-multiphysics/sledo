@@ -37,21 +37,29 @@ class TestOptimiser:
     @pytest.fixture(autouse=True)
     def setup_method(self, tmp_data_dir):
         self.opt = Optimiser(
-            NAME,
             DESIGN_EVALUATOR,
             SEARCH_SPACE,
-            max_total_trials=5,
+            max_total_trials=1,
+            name=NAME,
             data_dir=tmp_data_dir,
         )
 
     def test_init(self):
         """Test Optimiser class initiates correctly."""
-        assert self.opt.name == NAME
         assert self.opt.design_evaluator == DESIGN_EVALUATOR
         assert self.opt.search_space == SEARCH_SPACE
         assert isinstance(self.opt.search_alg, ConcurrencyLimiter)
+        assert self.opt.name == NAME
         assert self.opt.data_dir.is_dir()
         assert isinstance(self.opt.tuner, tune.Tuner)
+
+    def test_default_name(self, tmp_data_dir):
+        expected_default_name = "y1_optimiser"
+        default_name_opt = Optimiser(
+            DESIGN_EVALUATOR, SEARCH_SPACE, 1, data_dir=tmp_data_dir
+        )
+        default_name = default_name_opt.name
+        assert default_name == expected_default_name
 
     def test_run_optimisation(self):
         """Test that the run_optimisation method returns results."""
