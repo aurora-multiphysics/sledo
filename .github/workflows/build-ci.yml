@@ -22,11 +22,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Create venv and install
+      - name: Create venv and install sledo
         run: |
           python -m venv venv
           . venv/bin/activate
-          pip install .
+          pip install .[test]
+
+      - name: Clone and install mooseherder
+        run: |
+          cd ..
+          git clone https://github.com/ScepticalRabbit/mooseherder
+          cd sledo
+          pip install ../mooseherder
+
+      - name: Clone and install catbird
+        run: |
+          cd ..
+          git clone https://github.com/helen-brooks/catbird
+          cd sledo
+          pip install ../catbird
 
       - name: Run linter
         run: |
