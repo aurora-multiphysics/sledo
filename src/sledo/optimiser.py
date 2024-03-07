@@ -25,6 +25,7 @@ class Optimiser:
         max_total_trials: int,
         max_concurrent_trials: int = 1,
         search_alg: Searcher = AxSearch(),
+        mode: str = "min",
         name: str = None,
         data_dir: str | Path = None,
     ) -> None:
@@ -45,6 +46,9 @@ class Optimiser:
         search_alg : Searcher, optional
             The search algorithm to use, by default AxSearch(). Must be an
             instance of a subclass of the Ray Tune Searcher base class.
+        mode : str
+            Must be "min" or "max". Sets whether the optimisation metric is
+            minimised or maximised, by default "min".
         name : str
             The name of the optimiser, will be passed to the Ray Tune tuner. By
             default, None, in which case a name is constructed by concatenating
@@ -94,7 +98,7 @@ class Optimiser:
         self.tuner = tune.Tuner(
             self.evaluation_function,
             tune_config=tune.TuneConfig(
-                mode="min",
+                mode=mode,
                 metric=self.metrics[0],
                 search_alg=self.search_alg,
                 num_samples=max_total_trials,
