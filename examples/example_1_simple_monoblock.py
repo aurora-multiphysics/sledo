@@ -25,7 +25,7 @@ from sledo import MOOSE_CONFIG_FILE
 # In general, the user will set their own paths and pass them where required.
 EXAMPLES_DIR = SLEDO_ROOT / "examples"
 INPUT_FILE = EXAMPLES_DIR / "input_files" / "simple_monoblock_thermomech.i"
-WORKING_DIR = EXAMPLES_DIR / "results" / "example_1"
+WORKING_DIR = EXAMPLES_DIR / "results"
 PICKLE_FILEPATH = WORKING_DIR / "example_1_optimiser.pickle"
 
 if __name__ == "__main__":
@@ -39,7 +39,6 @@ if __name__ == "__main__":
     design_evaluator = MooseHerderDesignEvaluator(
         metrics,
         INPUT_FILE,  # The base input file to be modified per design iteration.
-        working_dir=WORKING_DIR,  # Directory to store generated files.
         config_path=MOOSE_CONFIG_FILE,  # Contains required MOOSE paths.
     )
 
@@ -58,7 +57,7 @@ if __name__ == "__main__":
         design_evaluator,
         search_space,
         max_total_trials=20,
-        name="simple-monoblock-optimiser",
+        name="example_1",
         data_dir=WORKING_DIR,
     )
 

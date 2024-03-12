@@ -107,7 +107,6 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         self,
         metrics: list[str],
         base_input_file: Path | str,
-        working_dir: Path | str = Path.cwd(),
         config_path: Path | str = MOOSE_CONFIG_FILE,
         run_options: dict = {
             "n_tasks": 1,
@@ -127,9 +126,6 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         base_input_file : Path | str
             Path to the base MOOSE input file (.i) to use as the basis for
             generating modified files. This file will not be modified.
-        working_dir : Path | str, optional
-            Path to the working directory to use for storing modified MOOSE
-            input files (.i) and running MOOSE, by default Path.cwd().
         config_path : Path | str, optional
             Path to the config file containing the required paths to run MOOSE,
             by default 'moose_config.json' in the sledo root folder.
@@ -139,7 +135,6 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         """
         self._metrics = metrics
         self.base_input_file = Path(base_input_file)
-        self.working_dir = Path(working_dir)
         self.config_path = Path(config_path)
         self.run_options = run_options
 
@@ -170,7 +165,7 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         # Generate input file.
         trial_filepath = generate_modified_input_file(
             self.base_input_file,
-            self.working_dir / "trial.i",
+            Path.cwd() / "trial.i",
             parameters,
         )
         # Run simulation.
@@ -199,7 +194,6 @@ class CatBirdMooseHerderDesignEvaluator(DesignEvaluator):
         self,
         metrics: list[str],
         model: MooseModel,
-        working_dir: Path | str = Path.cwd(),
         config_path: Path | str = MOOSE_CONFIG_FILE,
         run_options: dict = {
             "n_tasks": 1,
@@ -219,9 +213,6 @@ class CatBirdMooseHerderDesignEvaluator(DesignEvaluator):
         model : MooseModel
             A catbird MooseModel capable of updating parameters and writing a
             MOOSE input file.
-        working_dir : Path | str, optional
-            Path to the working directory to use for storing modified MOOSE
-            input files (.i) and running MOOSE, by default Path.cwd().
         config_path : Path | str, optional
             Path to the config file containing the required paths to run MOOSE,
             by default 'moose_config.json' in the sledo root folder.
@@ -231,7 +222,6 @@ class CatBirdMooseHerderDesignEvaluator(DesignEvaluator):
         """
         self._metrics = metrics
         self._model = model
-        self.working_dir = Path(working_dir)
         self.config_path = Path(config_path)
         self.run_options = run_options
 
@@ -333,7 +323,7 @@ class CatBirdMooseHerderDesignEvaluator(DesignEvaluator):
         """
         # Generate input file.
         trial_filepath = self.generate_input_file(
-            self.working_dir / "trial.i",
+            Path.cwd() / "trial.i",
             parameters,
         )
         # Run simulation.

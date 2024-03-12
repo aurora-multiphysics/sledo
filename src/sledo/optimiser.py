@@ -4,6 +4,7 @@ Optimiser class for SLEDO.
 (c) Copyright UKAEA 2023-2024.
 """
 
+import os
 from pathlib import Path
 import dill
 
@@ -88,15 +89,13 @@ class Optimiser:
         if not self.data_dir.exists():
             self.data_dir.mkdir()
 
-        # Add a step to the evaluation function reporting the results of each
-        # design evaluation to the ray tune optimiser.
-        self.evaluation_function = lambda results_dict: train.report(
-            self.design_evaluator.evaluate_design(results_dict)
-        )
+        # Workaround to a bug which causes ray to save to both the passed
+        # storage directory and the default (~/ray-results).
+        os.environ['TUNE_RESULT_DIR'] = str(self.data_dir)
 
         # Instantiate ray tune Tuner object.
         self.tuner = tune.Tuner(
-            self.evaluation_function,
+            self.trial,
             tune_config=tune.TuneConfig(
                 mode=mode,
                 metric=self.metrics[0],
@@ -104,10 +103,28 @@ class Optimiser:
                 num_samples=max_total_trials,
             ),
             run_config=train.RunConfig(
+                storage_path=self.data_dir,
                 name=self.name,
+                log_to_file=True,
             ),
             param_space=search_space,
         )
+
+    def trial(self, parameters: dict):
+        """Trial evaluation function to be passed to the tuner object.
+
+        Calls the evaluate_design method of the passed DesignEvaluator subclass
+        with the parameters for a given trial and reports the result to
+        the optimiser via train.report().
+
+        Note: users should not need to call this method directly.
+
+        Parameters
+        ----------
+        parameters : dict
+            Dictionary of parameters describing the design to be evaluated.
+        """
+        train.report(self.design_evaluator.evaluate_design(parameters))
 
     def run_optimisation(self) -> ResultGrid:
         """Run the optimisation loop and return the results.
