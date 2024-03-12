@@ -88,15 +88,9 @@ class Optimiser:
         if not self.data_dir.exists():
             self.data_dir.mkdir()
 
-        # Add a step to the evaluation function reporting the results of each
-        # design evaluation to the ray tune optimiser.
-        self.evaluation_function = lambda results_dict: train.report(
-            self.design_evaluator.evaluate_design(results_dict)
-        )
-
         # Instantiate ray tune Tuner object.
         self.tuner = tune.Tuner(
-            self.evaluation_function,
+            self.trial,
             tune_config=tune.TuneConfig(
                 mode=mode,
                 metric=self.metrics[0],
@@ -109,6 +103,22 @@ class Optimiser:
             ),
             param_space=search_space,
         )
+
+    def trial(self, parameters: dict):
+        """Trial evaluation function to be passed to the tuner object.
+
+        Calls the evaluate_design method of the passed DesignEvaluator subclass
+        with the parameters for a given trial and reports the result to
+        the optimiser via train.report().
+
+        Note: users should not need to call this method directly.
+
+        Parameters
+        ----------
+        parameters : dict
+            Dictionary of parameters describing the design to be evaluated.
+        """
+        train.report(self.design_evaluator.evaluate_design(parameters))
 
     def run_optimisation(self) -> ResultGrid:
         """Run the optimisation loop and return the results.
