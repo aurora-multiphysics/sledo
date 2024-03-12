@@ -76,7 +76,6 @@ if __name__ == "__main__":
         design_evaluator = CatBirdMooseHerderDesignEvaluator(
             metrics,
             model,
-            working_dir=WORKING_DIR,  # Directory to store generated files.
             config_path=MOOSE_CONFIG_FILE,  # Contains required MOOSE paths.
         )
 

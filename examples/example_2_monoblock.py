@@ -39,7 +39,6 @@ if __name__ == "__main__":
     design_evaluator = MooseHerderDesignEvaluator(
         metrics,
         INPUT_FILE,  # The base input file to be modified per design iteration.
-        working_dir=WORKING_DIR,  # Directory to store generated files.
         config_path=MOOSE_CONFIG_FILE,  # Contains required MOOSE paths.
     )
 
