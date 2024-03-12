@@ -38,7 +38,7 @@ from input_files.catbird_monoblock import (
 # Set the paths required for this example.
 # In general, the user will set their own paths and pass them where required.
 EXAMPLES_DIR = SLEDO_ROOT / "examples"
-WORKING_DIR = EXAMPLES_DIR / "results" / "example_3"
+WORKING_DIR = EXAMPLES_DIR / "results"
 FACTORY_CONFIG_PATH = WORKING_DIR / "factory_config.json"
 INPUT_FILE_PATH = WORKING_DIR / "trial.i"
 PICKLE_FILEPATH = WORKING_DIR / "example_3_optimiser.pickle"
@@ -97,7 +97,7 @@ if __name__ == "__main__":
             design_evaluator,
             search_space,
             max_total_trials=20,
-            name="catbird-monoblock-optimiser",
+            name="example_3",
             data_dir=WORKING_DIR,
         )
 
