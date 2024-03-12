@@ -4,6 +4,7 @@ Optimiser class for SLEDO.
 (c) Copyright UKAEA 2023-2024.
 """
 
+import os
 from pathlib import Path
 import dill
 
@@ -88,6 +89,10 @@ class Optimiser:
         if not self.data_dir.exists():
             self.data_dir.mkdir()
 
+        # Workaround to a bug which causes ray to save to both the passed
+        # storage directory and the default (~/ray-results).
+        os.environ['TUNE_RESULT_DIR'] = str(self.data_dir)
+
         # Instantiate ray tune Tuner object.
         self.tuner = tune.Tuner(
             self.trial,
@@ -100,6 +105,7 @@ class Optimiser:
             run_config=train.RunConfig(
                 storage_path=self.data_dir,
                 name=self.name,
+                log_to_file=True,
             ),
             param_space=search_space,
         )
