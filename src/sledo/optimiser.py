@@ -104,6 +104,7 @@ class Optimiser:
                 num_samples=max_total_trials,
             ),
             run_config=train.RunConfig(
+                storage_path=self.data_dir,
                 name=self.name,
             ),
             param_space=search_space,
