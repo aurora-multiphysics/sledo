@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sledo"
-version = "0.2.0"
+version = "0.2.1"
 description = "Sequential learning engineering design optimiser"
 authors = [
   { name = "Luke Humphrey", email = "luke.humphrey@ukaea.uk" },
@@ -21,7 +21,7 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-  "ax-platform==0.3.4",
+  "ax-platform[mysql]==0.4.0",
   "dill==0.3.7",
   "ray[train]==2.9.0",
 ]
