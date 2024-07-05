@@ -10,7 +10,6 @@ import dill
 
 from ray import train, tune
 from ray.tune.search import Searcher
-from ray.tune.search.ax import AxSearch
 from ray.tune.result_grid import ResultGrid
 
 from sledo.design_evaluator import DesignEvaluator
@@ -22,10 +21,10 @@ class Optimiser:
     def __init__(
         self,
         design_evaluator: DesignEvaluator,
+        search_alg: Searcher,
         search_space: dict,
         max_total_trials: int,
         max_concurrent_trials: int = 1,
-        search_alg: Searcher = AxSearch(),
         mode: str = "min",
         name: str = None,
         data_dir: str | Path = None,
@@ -36,6 +35,9 @@ class Optimiser:
         ----------
         design_evaluator : DesignEvaluator
             The DesignEvaluator subclass used to evaluate each design.
+        search_alg : Searcher
+            The search algorithm to use. Must be an instance of a subclass of
+            the Ray Tune Searcher base class.
         search_space : dict
             The search space for the optimisation, values must be set according
             to the Ray Tune Search Space API.
@@ -44,9 +46,6 @@ class Optimiser:
         max_concurrent_trials : int, optional
             The maximum number of concurrent trials, by default 1 (i.e.
             trials are sequential).
-        search_alg : Searcher, optional
-            The search algorithm to use, by default AxSearch(). Must be an
-            instance of a subclass of the Ray Tune Searcher base class.
         mode : str
             Must be "min" or "max". Sets whether the optimisation metric is
             minimised or maximised, by default "min".
@@ -89,9 +88,9 @@ class Optimiser:
         if not self.data_dir.exists():
             self.data_dir.mkdir()
 
-        # Workaround to a bug which causes ray to save to both the passed
-        # storage directory and the default (~/ray-results).
-        os.environ['TUNE_RESULT_DIR'] = str(self.data_dir)
+        # # Workaround to a bug which causes ray to save to both the passed
+        # # storage directory and the default (~/ray-results).
+        # os.environ['TUNE_RESULT_DIR'] = str(self.data_dir)
 
         # Instantiate ray tune Tuner object.
         self.tuner = tune.Tuner(
