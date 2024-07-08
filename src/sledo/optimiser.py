@@ -88,9 +88,9 @@ class Optimiser:
         if not self.data_dir.exists():
             self.data_dir.mkdir()
 
-        # # Workaround to a bug which causes ray to save to both the passed
-        # # storage directory and the default (~/ray-results).
-        # os.environ['TUNE_RESULT_DIR'] = str(self.data_dir)
+        # Workaround to a bug which causes ray to save to both the passed
+        # storage directory and the default (~/ray-results).
+        os.environ['TUNE_RESULT_DIR'] = str(self.data_dir)
 
         # Instantiate ray tune Tuner object.
         self.tuner = tune.Tuner(
