@@ -88,9 +88,10 @@ def run_simulation(
     exodus_filepath : Path
         Expected path to the exodus file using the "_out.e" suffix convention.
     """
+    input_filepath = Path(input_filepath)
     moose_config = MooseConfig().read_config(moose_config_file)
     moose_runner = MooseRunner(moose_config)
-    moose_runner.set_input_file(Path(input_filepath))
+    moose_runner.set_input_file(input_filepath)
     moose_runner.set_run_opts(**run_options)
     moose_runner.run()
 
