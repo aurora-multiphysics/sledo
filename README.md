@@ -70,9 +70,30 @@ Lloyd Fletcher, UK Atomic Energy Authority
 
 If using `sledo` in your research, please cite the following:
 
-> Citation TBC
+* L R Humphrey *et al* 2024 *Plasma Phys. Control.Fusion* **66** 025002
 
-Please also cite `sledo`'s dependencies as indicated on their individual websites:
+  **DOI:** [10.1088/1361-6587/ad11fb](https://doi.org/10.1088/1361-6587/ad11fb)
+
+  **Bibtex:**
+  ```
+  @article{humphrey_machine_2024,
+	title = {Machine learning techniques for sequential learning engineering design optimisation},
+	volume = {66},
+	issn = {0741-3335, 1361-6587},
+	url = {https://iopscience.iop.org/article/10.1088/1361-6587/ad11fb},
+	doi = {10.1088/1361-6587/ad11fb},
+	language = {en},
+	number = {2},
+	urldate = {2023-12-21},
+	journal = {Plasma Physics and Controlled Fusion},
+	author = {Humphrey, L R and Dubas, A J and Fletcher, L C and Davis, A},
+	month = feb,
+	year = {2024},
+	pages = {025002},
+    }
+    ```
+
+Please also consider citing `sledo`'s dependencies as indicated on their individual websites:
 
 - MOOSE (https://mooseframework.inl.gov/citing.html)
 - Ray-Tune (https://docs.ray.io/en/latest/tune/index.html#citing-tune)
