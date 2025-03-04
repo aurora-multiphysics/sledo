@@ -162,6 +162,9 @@ cython_debug/
 # Ignore vscode files
 .vscode
 
+# Ignore temp files
+.temp_files
+
 # Ignore any results folders
 results
 
