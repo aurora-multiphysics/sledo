@@ -5,25 +5,20 @@ Example input file for running Bayesian optimisation of a divertor monoblock
 to minimise the peak von misses stress predicted by a thermomechanical
 MOOSE simulation.
 
-(c) Copyright UKAEA 2023-2024.
+(c) Copyright UKAEA 2023-2025.
 """
-
+from pathlib import Path
 from ray import tune
 
 from sledo import Optimiser, MooseHerderDesignEvaluator
-from sledo import SLEDO_ROOT
+from ray.tune.search.bayesopt import BayesOptSearch
 
-# This points to the file 'moose_config.json' in sledo root folder.
-# If you haven't already, please make sure you've entered the required paths
-# for your chosen MOOSE app.
-# In general, you don't need to import this as it will be used by default,
-# however you may point to a config file in a different location if you wish
-# to use something else for a given optimisation run.
-from sledo import MOOSE_CONFIG_FILE
-
-# Set the paths required for this example.
-# In general, the user will set their own paths and pass them where required.
-EXAMPLES_DIR = SLEDO_ROOT / "examples"
+# Set the paths required for this example, starting with the directory
+# containing this file. In general usage, the user will set their own paths.
+# If you haven't already, you should update the moose_config.json file in the
+# examples folder with the paths to your MOOSE installation.
+EXAMPLES_DIR = Path(__file__).parent.absolute()
+MOOSE_CONFIG_FILE = EXAMPLES_DIR / "moose_config.json"
 INPUT_FILE = EXAMPLES_DIR / "input_files" / "monoblock_thermomech.i"
 WORKING_DIR = EXAMPLES_DIR / "results"
 PICKLE_FILEPATH = WORKING_DIR / "example_2_optimiser.pickle"
@@ -42,6 +37,11 @@ if __name__ == "__main__":
         config_path=MOOSE_CONFIG_FILE,  # Contains required MOOSE paths.
     )
 
+    # Instantiate search algorithm.
+    bayesopt_search_alg = BayesOptSearch(
+        utility_kwargs={"kind": "ucb", "kappa": 2.5, "xi": 0.0}
+    )
+
     # Define a search space according to the Ray Tune API.
     # Documentation here:
     # https://docs.ray.io/en/latest/tune/api/search_space.html
@@ -57,6 +57,7 @@ if __name__ == "__main__":
     # Instantiate SLEDO optimiser.
     opt = Optimiser(
         design_evaluator,
+        bayesopt_search_alg,
         search_space,
         max_total_trials=20,
         name="example_2",

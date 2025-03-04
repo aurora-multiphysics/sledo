@@ -15,7 +15,6 @@ from sledo.mooseherder_functions import (
     run_simulation,
     read_exodus,
 )
-from sledo.paths import MOOSE_CONFIG_FILE
 
 
 class DesignEvaluator(ABC):
@@ -107,7 +106,7 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
         self,
         metrics: list[str],
         base_input_file: Path | str,
-        config_path: Path | str = MOOSE_CONFIG_FILE,
+        config_path: Path | str,
         run_options: dict = {
             "n_tasks": 1,
             "n_threads": 4,
@@ -127,8 +126,7 @@ class MooseHerderDesignEvaluator(DesignEvaluator):
             Path to the base MOOSE input file (.i) to use as the basis for
             generating modified files. This file will not be modified.
         config_path : Path | str, optional
-            Path to the config file containing the required paths to run MOOSE,
-            by default 'moose_config.json' in the sledo root folder.
+            Path to the config file containing the required paths to run MOOSE.
         run_options : dict, optional
             Dict of options for running the simulation, by default
             { "n_tasks": 1, "n_threads": 4, "redirect_out": False }.
@@ -194,7 +192,7 @@ class CatBirdMooseHerderDesignEvaluator(DesignEvaluator):
         self,
         metrics: list[str],
         model: MooseModel,
-        config_path: Path | str = MOOSE_CONFIG_FILE,
+        config_path: Path | str,
         run_options: dict = {
             "n_tasks": 1,
             "n_threads": 4,
@@ -214,8 +212,7 @@ class CatBirdMooseHerderDesignEvaluator(DesignEvaluator):
             A catbird MooseModel capable of updating parameters and writing a
             MOOSE input file.
         config_path : Path | str, optional
-            Path to the config file containing the required paths to run MOOSE,
-            by default 'moose_config.json' in the sledo root folder.
+            Path to the config file containing the required paths to run MOOSE.
         run_options : dict, optional
             Dict of options for running the simulation, by default
             { "n_tasks": 1, "n_threads": 4, "redirect_out": False }.

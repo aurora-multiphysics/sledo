@@ -10,7 +10,6 @@ from sledo.design_evaluator import (
     MooseHerderDesignEvaluator,
     CatBirdMooseHerderDesignEvaluator,
 )
-from sledo.paths import SLEDO_ROOT, MOOSE_CONFIG_FILE
 
 __all__ = [
     Optimiser,
@@ -18,6 +17,4 @@ __all__ = [
     TestFunctionDesignEvaluator,
     MooseHerderDesignEvaluator,
     CatBirdMooseHerderDesignEvaluator,
-    SLEDO_ROOT,
-    MOOSE_CONFIG_FILE,
 ]

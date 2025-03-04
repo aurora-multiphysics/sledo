@@ -4,14 +4,15 @@ Tests for the SLEDO DesignEvaluator abstract base class and its subclasses.
 (c) Copyright UKAEA 2024.
 """
 import pytest
+from pathlib import Path
 
 from sledo.design_evaluator import (
     TestFunctionDesignEvaluator,
     MooseHerderDesignEvaluator,
 )
-from sledo.paths import SLEDO_ROOT
 
-TEST_INPUT_FILE = SLEDO_ROOT / "tests" / "test_data" / "input.i"
+TESTS_DIR = Path(__file__).parent.absolute()
+TEST_INPUT_FILE = TESTS_DIR / "input_files" / "input.i"
 
 
 @pytest.fixture(scope="session")

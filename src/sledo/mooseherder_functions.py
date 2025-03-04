@@ -17,8 +17,6 @@ from mooseherder import (
     SimData,
 )
 
-from sledo.paths import MOOSE_CONFIG_FILE
-
 
 def generate_modified_input_file(
     base_input_file: Path | str,
@@ -63,7 +61,7 @@ def generate_modified_input_file(
 
 def run_simulation(
     input_filepath: Path | str,
-    moose_config_file: Path | str = MOOSE_CONFIG_FILE,
+    moose_config_file: Path | str,
     run_options: dict = {
         "n_tasks": 1,
         "n_threads": 4,
@@ -77,8 +75,7 @@ def run_simulation(
     input_filepath : Path | str
         Path to the moose input file (.i) to run.
     config_path : Path | str, optional
-        Path to the config file containing the required paths to run MOOSE,
-        by default 'moose_config.json' in the sledo root folder is used.
+        Path to the config file containing the required paths to run MOOSE.
     run_options : dict, optional
         Dict of options for running the simulation, by default
         { "n_tasks": 1, "n_threads": 4, "redirect_out": False }.
