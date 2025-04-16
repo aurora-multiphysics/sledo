@@ -24,6 +24,7 @@ dependencies = [
   "dill==0.3.7",
   "ray[train]==2.9",
   "bayesian-optimization==1.5.0",
+  "scikit-optimize==0.10.2",
 ]
 
 [project.optional-dependencies]

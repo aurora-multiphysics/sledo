@@ -12,6 +12,7 @@ from ray import tune
 
 from sledo import Optimiser, MooseHerderDesignEvaluator
 from ray.tune.search.bayesopt import BayesOptSearch
+from skopt.sampler import Sobol
 
 # Set the paths required for this example, starting with the directory
 # containing this file. In general usage, the user will set their own paths.
@@ -37,11 +38,6 @@ if __name__ == "__main__":
         config_path=MOOSE_CONFIG_FILE,  # Contains required MOOSE paths.
     )
 
-    # Instantiate search algorithm.
-    bayesopt_search_alg = BayesOptSearch(
-        utility_kwargs={"kind": "ucb", "kappa": 2.5, "xi": 0.0}
-    )
-
     # Define a search space according to the Ray Tune API.
     # Documentation here:
     # https://docs.ray.io/en/latest/tune/api/search_space.html
@@ -52,12 +48,38 @@ if __name__ == "__main__":
         "monoBThick": tune.uniform(0.5e-3, 9e-3),
     }
 
+    # Instantiate search algorithm with list of initial points to evaluate.
+    # These initial points will be evaluated prior to Bayesian optimisation,
+    # informing the initial surrogate model.
+    sampler = Sobol()
+    num_initial_samples = 10*len(search_space)
+    initial_samples = sampler.generate(
+        dimensions=[
+            (bounds.lower, bounds.upper) for bounds in search_space.values()
+        ],
+        n_samples=num_initial_samples,
+    )
+    points_to_evaluate = []
+    param_names = list(search_space.keys())
+    for sample in initial_samples:
+        points_to_evaluate.append(
+            {param_names[i]: sample[i] for i in range(len(param_names))}
+        )
+
+    bayesopt_search_alg = BayesOptSearch(
+        points_to_evaluate=points_to_evaluate,
+        utility_kwargs={
+            "kind": "ei",     # Expected improvement.
+            "xi": 0.01,       # Exploration-exploitation trade-off.
+        }
+    )
+
     # Instantiate SLEDO optimiser.
     opt = Optimiser(
         design_evaluator,
         bayesopt_search_alg,
         search_space,
-        max_total_trials=20,
+        max_total_trials=20+num_initial_samples,
         name="example_1",
         data_dir=WORKING_DIR,
     )
